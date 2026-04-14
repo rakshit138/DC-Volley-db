@@ -1,0 +1,11 @@
+{
+  "hosting": {
+    "predeploy": ["node copy-for-hosting.js"],
+    "public": "public",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ]
+  }
+}

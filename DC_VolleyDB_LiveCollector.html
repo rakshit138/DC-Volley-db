@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<title>DC_VolleyDB — Live Collector</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --navy:#0d1b2a;--navy2:#1a2d42;--navy3:#243850;
+  --gold:#f5c842;--gold2:#e6b830;--teal:#00c9a7;--teal2:#00a88c;
+  --red:#ff4757;--green:#2ed573;--blue:#4a9eff;--purple:#a78bfa;--pink:#f472b6;
+  --text:#e8ecf0;--text2:#9baec2;--text3:#5a7a99;
+  --border:#2a3f57;--border2:#1e3048;--card:#141f2e;--card2:#0f1923;
+}
+html,body{
+  height:100%;min-height:100vh;
+  background:var(--navy);color:var(--text);
+  font-family:'Segoe UI',system-ui,sans-serif;
+  overflow-x:hidden;
+}
+
+/* ── TOPBAR ── */
+.topbar{
+  background:var(--card2);border-bottom:2px solid var(--gold);
+  padding:0 14px;height:52px;display:flex;align-items:center;
+  gap:10px;position:sticky;top:0;z-index:100;
+}
+.logo{font-size:15px;font-weight:900;letter-spacing:-1px;white-space:nowrap}
+.logo-dc{color:#ff6b9d}.logo-v{color:var(--gold)}.logo-db{color:var(--teal)}
+.logo-tag{font-size:9px;color:var(--teal);font-weight:800;background:#0a2820;
+  border:1px solid var(--teal);border-radius:8px;padding:1px 6px;white-space:nowrap}
+
+.push-btn{
+  margin-left:auto;padding:5px 12px;border-radius:7px;border:none;
+  background:linear-gradient(135deg,var(--teal),var(--teal2));
+  color:var(--navy);font-size:11px;font-weight:800;cursor:pointer;
+  display:flex;align-items:center;gap:5px;white-space:nowrap;
+  transition:all .15s;flex-shrink:0;
+}
+.push-btn:active{transform:scale(.94)}
+.live-dot{
+  width:8px;height:8px;border-radius:50%;background:var(--red);
+  display:inline-block;animation:blink 1s ease-in-out infinite;flex-shrink:0;
+}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+
+/* ── SETUP SCREEN ── */
+#setup-screen{padding:16px;display:flex;flex-direction:column;gap:14px}
+.setup-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px}
+.setup-title{font-size:11px;color:var(--text2);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px}
+.fg{display:flex;flex-direction:column;gap:5px;margin-bottom:10px}
+.fl2{font-size:10px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.fs{background:var(--navy3);border:1px solid var(--border);border-radius:8px;color:var(--text);
+  padding:10px 32px 10px 12px;font-size:14px;outline:none;width:100%;cursor:pointer;
+  -webkit-appearance:none;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='7'%3E%3Cpath d='M1 1l4.5 4.5L10 1' stroke='%239baec2' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 11px center;
+}
+.fs:focus{border-color:var(--gold)}
+.start-btn{
+  width:100%;padding:14px;border-radius:10px;border:none;
+  background:var(--gold);color:var(--navy);
+  font-size:16px;font-weight:800;cursor:pointer;
+  transition:all .12s;display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.start-btn:active{transform:scale(.97);background:var(--gold2)}
+.start-btn:disabled{opacity:.4;cursor:not-allowed}
+
+/* ── NO DB NOTICE ── */
+#no-db{
+  padding:40px 20px;text-align:center;display:none;
+  flex-direction:column;align-items:center;gap:14px;
+}
+#no-db h3{color:var(--gold);font-size:18px}
+#no-db p{color:var(--text2);font-size:13px;line-height:1.6;max-width:320px}
+#no-db code{background:var(--card);border:1px solid var(--border);
+  padding:2px 7px;border-radius:4px;font-size:12px;color:var(--teal)}
+
+/* ── COLLECTOR SCREEN ── */
+#collector{display:none;flex-direction:column;height:calc(100vh - 52px);overflow:hidden}
+
+/* Match header */
+.match-header{
+  background:var(--card2);border-bottom:1px solid var(--border2);
+  padding:10px 14px;flex-shrink:0;
+}
+.match-score-row{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+}
+.team-score-block{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;
+}
+.team-label{font-size:11px;color:var(--text2);font-weight:700;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px;text-align:center}
+.score-btn{
+  font-size:32px;font-weight:900;line-height:1;
+  padding:6px 18px;border-radius:9px;border:none;cursor:pointer;
+  transition:all .1s;min-width:64px;text-align:center;
+}
+.score-btn:active{transform:scale(.88)}
+.score-home{background:var(--gold);color:var(--navy)}
+.score-away{background:var(--navy3);color:var(--text);border:1px solid var(--border)}
+.score-mid{font-size:18px;font-weight:900;color:var(--text3)}
+.set-info{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-top:8px;flex-wrap:wrap;gap:4px;
+}
+.set-pills{display:flex;gap:4px;flex-wrap:wrap}
+.set-pill{
+  font-size:10px;padding:2px 8px;border-radius:5px;
+  background:var(--navy3);border:1px solid var(--border);color:var(--text2);font-weight:700;
+}
+.set-pill.won{border-color:var(--gold);color:var(--gold)}
+.set-tabs{display:flex;gap:3px}
+.stab{
+  padding:5px 10px;border-radius:6px;border:1px solid var(--border);
+  background:transparent;color:var(--text2);cursor:pointer;
+  font-size:12px;font-weight:700;transition:all .12s;
+}
+.stab.active{background:var(--gold);color:var(--navy);border-color:var(--gold)}
+.stab:active{transform:scale(.9)}
+.target-label{font-size:10px;color:var(--teal);font-weight:700}
+
+/* Scrollable body */
+.collector-body{
+  flex:1;overflow-y:auto;padding:12px 12px 80px;
+  -webkit-overflow-scrolling:touch;
+}
+.collector-body::-webkit-scrollbar{display:none}
+
+/* Player selector strip */
+.player-strip{
+  display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;margin-bottom:12px;
+  -webkit-overflow-scrolling:touch;
+}
+.player-strip::-webkit-scrollbar{display:none}
+.player-chip{
+  flex-shrink:0;padding:7px 12px;border-radius:20px;
+  border:1px solid var(--border);background:var(--card2);
+  color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;
+  white-space:nowrap;transition:all .12s;
+}
+.player-chip.active{
+  background:var(--gold);color:var(--navy);border-color:var(--gold);
+}
+.player-chip:active{transform:scale(.92)}
+
+/* Current player banner */
+.player-banner{
+  background:linear-gradient(135deg,var(--navy2),var(--card));
+  border:1px solid var(--border);border-radius:10px;
+  padding:10px 14px;margin-bottom:12px;
+  display:flex;align-items:center;gap:10px;
+}
+.player-av{
+  width:38px;height:38px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-weight:900;font-size:13px;flex-shrink:0;
+}
+.player-meta{flex:1;min-width:0}
+.player-name-lbl{font-size:14px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.player-sub{font-size:11px;color:var(--text2)}
+.player-pts{text-align:right;flex-shrink:0}
+.player-pts-val{font-size:22px;font-weight:900;color:var(--gold);line-height:1}
+.player-pts-lbl{font-size:9px;color:var(--text3);text-transform:uppercase}
+
+/* Stat grid */
+.stat-section-title{
+  font-size:10px;color:var(--text3);font-weight:700;text-transform:uppercase;
+  letter-spacing:.8px;margin:12px 0 8px;
+}
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:4px}
+.stat-btn{
+  border:none;border-radius:12px;padding:14px 6px 10px;
+  cursor:pointer;font-size:13px;font-weight:700;
+  transition:all .1s;display:flex;flex-direction:column;align-items:center;gap:5px;
+  -webkit-user-select:none;user-select:none;
+  position:relative;overflow:hidden;
+}
+.stat-btn:active{transform:scale(.88)}
+.stat-btn .sv{font-size:26px;font-weight:900;line-height:1}
+.stat-btn .sl{font-size:10px;opacity:.85;letter-spacing:.3px}
+
+/* Stat ripple */
+.stat-btn::after{
+  content:'';position:absolute;inset:0;background:white;
+  opacity:0;border-radius:inherit;transition:opacity .15s;
+}
+.stat-btn:active::after{opacity:.12}
+
+/* Stat button colors */
+.bkill{background:linear-gradient(135deg,#0f3020,#1a5030);color:#2ed573;border:1px solid #2a6040}
+.bblk{background:linear-gradient(135deg,#1a0a38,#2a1a50);color:#a78bfa;border:1px solid #3a2a60}
+.bace{background:linear-gradient(135deg,#0a1830,#152840);color:#4a9eff;border:1px solid #1e3850}
+.bdig{background:linear-gradient(135deg,#1e1a08,#302808);color:#fbbf24;border:1px solid #403810}
+.brcv{background:linear-gradient(135deg,#102018,#1a3828);color:#5dd3a8;border:1px solid #2a4838}
+.bast{background:linear-gradient(135deg,#1a1808,#2a2810);color:#e8d060;border:1px solid #383820}
+.berr{background:linear-gradient(135deg,#2a0808,#3a1010);color:#ff6b7a;border:1px solid #4a1818}
+.bse{background:linear-gradient(135deg,#2a1008,#3a1a10);color:#ff8c6a;border:1px solid #4a2818}
+.bre{background:linear-gradient(135deg,#280a18,#380a20);color:#ff6ab0;border:1px solid #480a28}
+.bneu{background:var(--navy3);color:var(--text2);border:1px solid var(--border)}
+
+/* Live stats strip */
+.live-stats{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:6px;
+  background:var(--card2);border:1px solid var(--border2);
+  border-radius:10px;padding:10px;margin-bottom:12px;
+}
+.ls-item{text-align:center}
+.ls-val{font-size:18px;font-weight:900;line-height:1;margin-bottom:2px}
+.ls-lbl{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px}
+
+/* Attack zone */
+.zone-grid{
+  display:inline-grid;grid-template-columns:repeat(3,1fr);gap:4px;
+  background:var(--card2);border:1px solid var(--border);
+  border-radius:8px;padding:8px;width:100%;
+}
+.zone-btn{
+  padding:12px 4px;border-radius:7px;border:1px solid var(--border2);
+  background:var(--navy3);color:var(--text2);font-size:14px;font-weight:800;
+  cursor:pointer;text-align:center;transition:all .12s;display:flex;flex-direction:column;align-items:center;gap:2px;
+}
+.zone-btn:active{transform:scale(.85)}
+.zone-btn .zv{font-size:16px;font-weight:900;color:var(--gold)}
+.zone-btn .zl{font-size:9px;color:var(--text3)}
+.zone-net{
+  grid-column:1/-1;text-align:center;font-size:9px;
+  color:var(--text3);letter-spacing:1.5px;padding:3px 0 0;
+}
+
+/* Bottom action bar */
+.bottom-bar{
+  position:fixed;bottom:0;left:0;right:0;
+  background:var(--card2);border-top:1px solid var(--border);
+  padding:8px 12px;display:flex;gap:8px;
+  safe-area-inset-bottom: env(safe-area-inset-bottom);
+}
+.bb-btn{
+  flex:1;padding:11px 6px;border-radius:8px;border:none;
+  font-size:12px;font-weight:700;cursor:pointer;
+  transition:all .12s;display:flex;align-items:center;justify-content:center;gap:5px;
+}
+.bb-btn:active{transform:scale(.95)}
+.bb-undo{background:var(--navy3);color:var(--text2);border:1px solid var(--border)}
+.bb-save{background:var(--teal);color:var(--navy)}
+.bb-match{background:var(--gold);color:var(--navy)}
+
+/* Confirm overlay */
+.confirm-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.75);
+  display:none;align-items:center;justify-content:center;
+  z-index:200;padding:20px;backdrop-filter:blur(4px);
+}
+.confirm-overlay.open{display:flex}
+.confirm-box{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:14px;padding:22px;width:100%;max-width:340px;
+}
+.confirm-title{font-size:16px;font-weight:800;color:var(--gold);margin-bottom:8px}
+.confirm-msg{font-size:13px;color:var(--text2);line-height:1.5;margin-bottom:18px}
+.confirm-btns{display:flex;gap:9px}
+.cb{flex:1;padding:11px;border-radius:8px;border:none;font-size:13px;font-weight:700;cursor:pointer;transition:all .12s}
+.cb:active{transform:scale(.96)}
+.cb-yes{background:var(--gold);color:var(--navy)}
+.cb-no{background:var(--navy3);color:var(--text2);border:1px solid var(--border)}
+
+/* Toast */
+#toast{
+  position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(10px);
+  background:var(--teal);color:var(--navy);
+  padding:8px 18px;border-radius:20px;font-size:13px;font-weight:700;
+  opacity:0;transition:all .25s;z-index:300;white-space:nowrap;
+  box-shadow:0 4px 18px rgba(0,201,167,.35);
+  pointer-events:none;
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#toast.err{background:var(--red);color:white;box-shadow:0 4px 18px rgba(255,71,87,.35)}
+
+/* pt tags */
+.pt{padding:2px 7px;border-radius:7px;font-size:11px;font-weight:800}
+.OH{background:#0d2040;color:#5ab4ff}.MB{background:#1e0e38;color:#b89afa}
+.S{background:#0f2010;color:#8ee060}.L{background:#2a200a;color:var(--gold)}.OP{background:#2a0e22;color:#f472b6}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo">
+    <span class="logo-dc">DC_</span><span class="logo-v">Volley</span><span class="logo-db">DB</span>
+  </div>
+  <div class="logo-tag">🔴 LIVE</div>
+  <button class="push-btn" id="push-btn" onclick="pushAll()" style="display:none">
+    <span id="push-icon">📺</span><span id="push-lbl">Push Live</span>
+  </button>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- NO DB -->
+<div id="no-db">
+  <div style="font-size:48px">🔌</div>
+  <h3>No Data Found</h3>
+  <p>Open <strong>DC_VolleyDB_fixed.html</strong> first, add your teams and players, then come back here.</p>
+  <p>Both files must run on the same local server:<br><code>python3 -m http.server 8080</code></p>
+  <button onclick="location.reload()" style="padding:10px 24px;border-radius:8px;border:none;background:var(--gold);color:var(--navy);font-size:14px;font-weight:800;cursor:pointer;margin-top:6px">🔄 Retry</button>
+</div>
+
+<!-- SETUP SCREEN -->
+<div id="setup-screen" style="display:none">
+
+  <div class="setup-card">
+    <div class="setup-title">🏐 Match Setup</div>
+    <div class="fg">
+      <label class="fl2">Select Match</label>
+      <select class="fs" id="s-match">
+        <option value="">— Choose a match —</option>
+      </select>
+    </div>
+    <div class="fg" style="margin-bottom:0">
+      <label class="fl2">Starting Player (optional)</label>
+      <select class="fs" id="s-player">
+        <option value="">— Select later —</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="setup-card" style="background:rgba(245,200,66,.06);border-color:rgba(245,200,66,.25)">
+    <div class="setup-title" style="color:var(--gold)">💡 How it works</div>
+    <div style="font-size:12px;color:var(--text2);line-height:1.8">
+      1. Select a match and tap <b style="color:var(--gold)">Start Collecting</b><br>
+      2. Tap a <b>player chip</b> at the top to select who you're tracking<br>
+      3. Tap stat buttons as actions happen on court<br>
+      4. Tap <b style="color:var(--teal)">📺 Push Live</b> to send to Display Board instantly<br>
+      5. Tap <b style="color:var(--gold)">✔ Save Match</b> when done
+    </div>
+  </div>
+
+  <button class="start-btn" id="start-btn" onclick="startCollecting()" disabled>
+    🏐 Start Collecting
+  </button>
+</div>
+
+<!-- COLLECTOR SCREEN -->
+<div id="collector">
+
+  <!-- Match score header -->
+  <div class="match-header">
+    <div class="match-score-row">
+      <div class="team-score-block">
+        <div class="team-label" id="c-home">Home</div>
+        <button class="score-btn score-home" id="c-sh" onclick="cScore('h')">0</button>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:2px">
+        <div class="score-mid">:</div>
+        <div style="font-size:9px;color:var(--text3);font-weight:700">SETS</div>
+        <div style="font-size:13px;font-weight:900;color:var(--gold)" id="c-sets">0–0</div>
+      </div>
+      <div class="team-score-block">
+        <div class="team-label" id="c-away">Away</div>
+        <button class="score-btn score-away" id="c-sa" onclick="cScore('a')">0</button>
+      </div>
+    </div>
+    <div class="set-info">
+      <div class="set-tabs" id="c-set-tabs">
+        <button class="stab active" onclick="cSetChange(1,this)">S1</button>
+        <button class="stab" onclick="cSetChange(2,this)">S2</button>
+        <button class="stab" onclick="cSetChange(3,this)">S3</button>
+        <button class="stab" onclick="cSetChange(4,this)">S4</button>
+        <button class="stab" onclick="cSetChange(5,this)">S5</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="target-label" id="c-target">First to 25</div>
+        <div class="set-pills" id="c-pills"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scrollable body -->
+  <div class="collector-body" id="c-body">
+
+    <!-- Player chips -->
+    <div class="player-strip" id="c-chips"></div>
+
+    <!-- Player banner -->
+    <div class="player-banner" id="c-banner" style="display:none">
+      <div class="player-av" id="c-av">#</div>
+      <div class="player-meta">
+        <div class="player-name-lbl" id="c-pname">—</div>
+        <div class="player-sub" id="c-psub">—</div>
+      </div>
+      <div class="player-pts">
+        <div class="player-pts-val" id="c-ppts">0</div>
+        <div class="player-pts-lbl">pts this set</div>
+      </div>
+    </div>
+
+    <!-- Live stats strip -->
+    <div class="live-stats" id="c-livestats">
+      <div class="ls-item"><div class="ls-val" style="color:var(--gold)" id="c-ls-pts">0</div><div class="ls-lbl">Pts</div></div>
+      <div class="ls-item"><div class="ls-val" style="color:var(--green)" id="c-ls-kl">0</div><div class="ls-lbl">Kills</div></div>
+      <div class="ls-item"><div class="ls-val" style="color:var(--purple)" id="c-ls-bk">0</div><div class="ls-lbl">Blk</div></div>
+      <div class="ls-item"><div class="ls-val" style="color:var(--blue)" id="c-ls-ac">0</div><div class="ls-lbl">Aces</div></div>
+    </div>
+
+    <!-- SCORING ACTIONS -->
+    <div class="stat-section-title">⚡ Scoring Actions</div>
+    <div class="stat-grid">
+      <button class="stat-btn bkill" onclick="cStat('atkKills',1,'atkAttempts',1)">
+        <span class="sv" id="c-atkKills">0</span><span class="sl">⚡ KILL</span>
+      </button>
+      <button class="stat-btn bblk" onclick="cStat('blkSolid',1,'blkAttempts',1)">
+        <span class="sv" id="c-blkSolid">0</span><span class="sl">🛡 BLOCK</span>
+      </button>
+      <button class="stat-btn bace" onclick="cStat('srvAces',1,'srvTotal',1)">
+        <span class="sv" id="c-srvAces">0</span><span class="sl">💫 ACE</span>
+      </button>
+    </div>
+
+    <!-- DEFENSIVE ACTIONS -->
+    <div class="stat-section-title">🤿 Defence</div>
+    <div class="stat-grid">
+      <button class="stat-btn bdig" onclick="cStat('digSuccess',1,'digTotal',1)">
+        <span class="sv" id="c-digSuccess">0</span><span class="sl">🤿 DIG</span>
+      </button>
+      <button class="stat-btn brcv" onclick="cStat('rcvPerfect',1,'rcvTotal',1)">
+        <span class="sv" id="c-rcvPerfect">0</span><span class="sl">★ RCV★</span>
+      </button>
+      <button class="stat-btn bast" onclick="cStat('setAssists',1,'setTotal',1)">
+        <span class="sv" id="c-setAssists">0</span><span class="sl">🎯 ASSIST</span>
+      </button>
+    </div>
+
+    <!-- ERRORS -->
+    <div class="stat-section-title">✗ Errors</div>
+    <div class="stat-grid">
+      <button class="stat-btn berr" onclick="cStat('atkErrors',1,'atkAttempts',1)">
+        <span class="sv" id="c-atkErrors">0</span><span class="sl">ATK ERR</span>
+      </button>
+      <button class="stat-btn bse" onclick="cStat('srvErrors',1,'srvTotal',1)">
+        <span class="sv" id="c-srvErrors">0</span><span class="sl">SRV ERR</span>
+      </button>
+      <button class="stat-btn bre" onclick="cStat('rcvErrors',1,'rcvTotal',1)">
+        <span class="sv" id="c-rcvErrors">0</span><span class="sl">RCV ERR</span>
+      </button>
+    </div>
+
+    <!-- RECEPTION QUALITY -->
+    <div class="stat-section-title">📬 Reception Quality</div>
+    <div class="stat-grid">
+      <button class="stat-btn bneu" onclick="cStat('rcvPositive',1,'rcvTotal',1)">
+        <span class="sv" id="c-rcvPositive">0</span><span class="sl">RCV +2</span>
+      </button>
+      <button class="stat-btn bneu" onclick="cStat('rcvNegative',1,'rcvTotal',1)">
+        <span class="sv" id="c-rcvNegative">0</span><span class="sl">RCV +1</span>
+      </button>
+      <button class="stat-btn bneu" onclick="cStat('blkErrors',1,'blkAttempts',1)">
+        <span class="sv" id="c-blkErrors">0</span><span class="sl">BLK ERR</span>
+      </button>
+    </div>
+
+    <!-- ATTACK ZONES -->
+    <div class="stat-section-title">📍 Attack Zone</div>
+    <div class="zone-grid" id="c-zones"></div>
+
+    <!-- PER display -->
+    <div style="background:var(--card2);border:1px solid var(--border2);border-radius:10px;padding:10px 14px;margin-top:12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;font-size:12px">
+      <span>Eff: <b style="color:var(--gold)" id="c-eff">–</b></span>
+      <span>Srv: <b style="color:var(--teal)" id="c-srv">–</b></span>
+      <span>Rcv: <b style="color:var(--purple)" id="c-rcv">–</b></span>
+      <span>PER: <b style="color:var(--green)" id="c-per">–</b></span>
+    </div>
+
+  </div><!-- /collector-body -->
+
+  <!-- BOTTOM BAR -->
+  <div class="bottom-bar">
+    <button class="bb-btn bb-undo" onclick="cUndo()">↩ Undo</button>
+    <button class="bb-btn bb-save" onclick="cSaveSet()">💾 Save Set</button>
+    <button class="bb-btn bb-match" onclick="confirmSaveMatch()">✔ Save Match</button>
+  </div>
+
+</div><!-- /collector -->
+
+<!-- CONFIRM OVERLAY -->
+<div class="confirm-overlay" id="confirm-overlay">
+  <div class="confirm-box">
+    <div class="confirm-title" id="confirm-title">Confirm</div>
+    <div class="confirm-msg" id="confirm-msg">Are you sure?</div>
+    <div class="confirm-btns">
+      <button class="cb cb-yes" id="confirm-yes">Yes</button>
+      <button class="cb cb-no" onclick="closeConfirm()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// STORAGE
+// ═══════════════════════════════════════════════════════
+const ST = {
+  load(k){ try{ const v=localStorage.getItem('dcvdb_'+k); return v?JSON.parse(v):null; }catch(e){ return null; } },
+  save(k,v){ try{ localStorage.setItem('dcvdb_'+k,JSON.stringify(v)); }catch(e){} }
+};
+let DB = { teams:[], players:[], matches:[], stats:{} };
+
+function loadDB(){
+  const teams   = ST.load('teams');
+  const players = ST.load('players');
+  const matches = ST.load('matches');
+  const stats   = ST.load('stats');
+  if(!teams && !players) return false;
+  DB.teams   = teams   || [];
+  DB.players = players || [];
+  DB.matches = matches || [];
+  DB.stats   = stats   || {};
+  return true;
+}
+function saveDB(){
+  ST.save('teams',DB.teams);
+  ST.save('players',DB.players);
+  ST.save('matches',DB.matches);
+  ST.save('stats',DB.stats);
+}
+
+// ── STAT HELPERS ──
+function newStats(){
+  return {atkAttempts:0,atkKills:0,atkErrors:0,blkAttempts:0,blkSolid:0,blkErrors:0,
+    srvTotal:0,srvAces:0,srvErrors:0,rcvTotal:0,rcvPerfect:0,rcvPositive:0,rcvNegative:0,
+    rcvErrors:0,setTotal:0,setAssists:0,setErrors:0,digTotal:0,digSuccess:0,digErrors:0,
+    points:0,clutch:0,zones:{1:0,2:0,3:0,4:0,5:0,6:0,7:0,8:0,9:0}};
+}
+function eff(s){ return Math.round((s.atkKills-s.atkErrors)/(s.atkAttempts||1)*100); }
+function srvR(s){ return Math.round((s.srvTotal-s.srvErrors)/(s.srvTotal||1)*100); }
+function rcvR(s){ return +((s.rcvPerfect*3+s.rcvPositive*2+s.rcvNegative)/((s.rcvTotal||1)*3)*100).toFixed(1); }
+function per(s){
+  const p=s.atkKills+s.blkSolid+s.srvAces;
+  const n=s.atkErrors+s.blkErrors+s.srvErrors+s.rcvErrors+s.digErrors;
+  const t=(s.atkAttempts+s.blkAttempts+s.srvTotal+s.rcvTotal+s.digTotal)||1;
+  return Math.round((p-n)/t*100);
+}
+function tn(tid){ return DB.teams.find(t=>t.id===tid)?.name||tid; }
+function pc(pos){ return {OH:'#5ab4ff',MB:'#b89afa',S:'#8ee060',L:'#f5c842',OP:'#f472b6'}[pos]||'#9baec2'; }
+function setTarget(n){ return n===5?15:25; }
+function isSetWon(h,a,n){
+  const t=setTarget(n);
+  if(h>=t&&h-a>=2) return 'h';
+  if(a>=t&&a-h>=2) return 'a';
+  return null;
+}
+
+// ═══════════════════════════════════════════════════════
+// LIVE STATE
+// ═══════════════════════════════════════════════════════
+let LC = {
+  mid:'', pid:'', set:1,
+  sets:{},           // {setNo: {pid: statsObj}}
+  hs:[0,0,0,0,0],    // home scores per set
+  as:[0,0,0,0,0],    // away scores per set
+  homeSetsWon:0, awaySetsWon:0,
+  hist:[]            // undo history
+};
+
+// ═══════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════
+function init(){
+  if(!loadDB()){
+    document.getElementById('no-db').style.display='flex';
+    return;
+  }
+  document.getElementById('setup-screen').style.display='flex';
+  populateSetup();
+}
+
+function populateSetup(){
+  const mSel = document.getElementById('s-match');
+  mSel.innerHTML = '<option value="">— Choose a match —</option>' +
+    DB.matches.map(m=>
+      '<option value="'+m.id+'">'+tn(m.home)+' vs '+tn(m.away)+
+      (m.status==='live'?' 🔴':'')+(m.status==='upcoming'?' 📅':'')+
+      ' — '+m.date+'</option>'
+    ).join('');
+  mSel.onchange = () => {
+    const mid = mSel.value;
+    const btn = document.getElementById('start-btn');
+    btn.disabled = !mid;
+    // populate player dropdown
+    const pSel = document.getElementById('s-player');
+    pSel.innerHTML = '<option value="">— Select later —</option>';
+    if(mid){
+      const m = DB.matches.find(x=>x.id===mid);
+      if(m){
+        DB.players.filter(p=>p.team===m.home||p.team===m.away).forEach(p=>{
+          pSel.innerHTML += '<option value="'+p.id+'">#'+p.jersey+' '+p.name+' ('+p.pos+') — '+tn(p.team)+'</option>';
+        });
+      }
+    }
+  };
+}
+
+function startCollecting(){
+  const mid = document.getElementById('s-match').value;
+  if(!mid){ toast('Select a match first',true); return; }
+  LC.mid = mid;
+  LC.pid = document.getElementById('s-player').value || '';
+  LC.set=1; LC.sets={}; LC.hs=[0,0,0,0,0]; LC.as=[0,0,0,0,0];
+  LC.homeSetsWon=0; LC.awaySetsWon=0; LC.hist=[];
+
+  // Mark match as live in DB
+  const m = DB.matches.find(x=>x.id===mid);
+  if(m && m.status==='upcoming'){ m.status='live'; saveDB(); }
+
+  document.getElementById('setup-screen').style.display='none';
+  document.getElementById('collector').style.display='flex';
+  document.getElementById('push-btn').style.display='flex';
+
+  const match = DB.matches.find(x=>x.id===LC.mid);
+  document.getElementById('c-home').textContent = match ? tn(match.home) : 'Home';
+  document.getElementById('c-away').textContent = match ? tn(match.away) : 'Away';
+
+  buildChips();
+  buildZones();
+  cUpdateScore();
+  if(LC.pid) selectPlayer(LC.pid);
+  cRefresh();
+}
+
+// ═══════════════════════════════════════════════════════
+// PLAYER CHIPS
+// ═══════════════════════════════════════════════════════
+function buildChips(){
+  const match = DB.matches.find(x=>x.id===LC.mid);
+  if(!match) return;
+  const players = DB.players.filter(p=>p.team===match.home||p.team===match.away);
+  const strip = document.getElementById('c-chips');
+  strip.innerHTML = '';
+
+  // Group by team
+  [match.home, match.away].forEach(tid=>{
+    const tPlayers = players.filter(p=>p.team===tid);
+    if(!tPlayers.length) return;
+    // Team label chip
+    const tlabel = document.createElement('div');
+    tlabel.style.cssText='flex-shrink:0;padding:7px 10px;border-radius:20px;background:var(--border2);color:var(--text3);font-size:10px;font-weight:700;white-space:nowrap;align-self:center;letter-spacing:.5px';
+    tlabel.textContent = tn(tid).split(' ')[0].toUpperCase();
+    strip.appendChild(tlabel);
+
+    tPlayers.sort((a,b)=>a.jersey-b.jersey).forEach(p=>{
+      const chip = document.createElement('button');
+      chip.className = 'player-chip' + (p.id===LC.pid?' active':'');
+      chip.id = 'chip-'+p.id;
+      chip.textContent = '#'+p.jersey+' '+p.name.split(' ')[0];
+      chip.onclick = ()=>{ selectPlayer(p.id); };
+      strip.appendChild(chip);
+    });
+  });
+}
+
+function selectPlayer(pid){
+  LC.pid = pid;
+  // Update chips
+  document.querySelectorAll('.player-chip').forEach(c=>c.classList.remove('active'));
+  const chip = document.getElementById('chip-'+pid);
+  if(chip){ chip.classList.add('active'); chip.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'}); }
+  // Update banner
+  const p = DB.players.find(x=>x.id===pid);
+  if(!p) return;
+  const posClr = pc(p.pos);
+  const av = document.getElementById('c-av');
+  if(p.photo){
+    av.innerHTML='<img src="'+p.photo+'" style="width:38px;height:38px;border-radius:50%;object-fit:cover;border:2px solid '+posClr+'" onerror="this.style.display=\'none\'">';
+  } else {
+    av.style.cssText='width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px;flex-shrink:0;background:'+posClr+'22;color:'+posClr;
+    av.textContent='#'+p.jersey;
+  }
+  document.getElementById('c-pname').textContent = p.name;
+  document.getElementById('c-psub').innerHTML = '<span class="pt '+p.pos+'">'+p.pos+'</span> · '+tn(p.team);
+  document.getElementById('c-banner').style.display='flex';
+  cRefresh();
+}
+
+// ═══════════════════════════════════════════════════════
+// STAT ENTRY
+// ═══════════════════════════════════════════════════════
+function cGet(){
+  if(!LC.sets[LC.set]) LC.sets[LC.set]={};
+  if(!LC.sets[LC.set][LC.pid]) LC.sets[LC.set][LC.pid]=newStats();
+  return LC.sets[LC.set][LC.pid];
+}
+
+function cStat(f,d,f2,d2){
+  if(!LC.pid){ toast('Tap a player first!',true); return; }
+  const s = cGet();
+  LC.hist.push({set:LC.set,pid:LC.pid,snap:JSON.parse(JSON.stringify(s))});
+  s[f] = Math.max(0,(s[f]||0)+d);
+  if(f2&&f2!==f) s[f2]=Math.max(0,(s[f2]||0)+d2);
+  s.points = s.atkKills+s.blkSolid+s.srvAces;
+  cRefresh();
+  // Auto-save every stat to localStorage instantly
+  autoSave();
+  // Show brief label
+  const labels={atkKills:'⚡ Kill',blkSolid:'🛡 Block',srvAces:'💫 Ace',digSuccess:'🤿 Dig',
+    rcvPerfect:'★ Perfect Rcv',setAssists:'🎯 Assist',atkErrors:'✗ Atk Err',
+    srvErrors:'✗ Srv Err',rcvErrors:'✗ Rcv Err',rcvPositive:'Rcv +2',rcvNegative:'Rcv +1',blkErrors:'Blk Err'};
+  toast('+'+d+' '+( labels[f]||f));
+}
+
+function cZone(z){
+  if(!LC.pid){ toast('Tap a player first!',true); return; }
+  const s = cGet();
+  LC.hist.push({set:LC.set,pid:LC.pid,snap:JSON.parse(JSON.stringify(s))});
+  if(!s.zones) s.zones={1:0,2:0,3:0,4:0,5:0,6:0,7:0,8:0,9:0};
+  s.zones[z]=(s.zones[z]||0)+1;
+  updateZoneBtns();
+  autoSave();
+  toast('Z'+z+' attack logged');
+}
+
+function cUndo(){
+  if(!LC.hist.length){ toast('Nothing to undo'); return; }
+  const l = LC.hist.pop();
+  if(!LC.sets[l.set]) LC.sets[l.set]={};
+  LC.sets[l.set][l.pid] = l.snap;
+  cRefresh();
+  toast('↩ Undone');
+}
+
+// ── AUTO-SAVE every stat tap ──
+function autoSave(){
+  if(!LC.mid) return;
+  if(!DB.stats[LC.mid]) DB.stats[LC.mid]={};
+  // Merge all sets for current player
+  if(LC.pid){
+    const merged = newStats();
+    Object.keys(LC.sets).forEach(sn=>{
+      const src = LC.sets[sn][LC.pid]; if(!src) return;
+      ['atkAttempts','atkKills','atkErrors','blkAttempts','blkSolid','blkErrors',
+       'srvTotal','srvAces','srvErrors','rcvTotal','rcvPerfect','rcvPositive','rcvNegative',
+       'rcvErrors','setTotal','setAssists','setErrors','digTotal','digSuccess','digErrors',
+       'points','clutch'].forEach(k=>merged[k]=(merged[k]||0)+(src[k]||0));
+      for(let z=1;z<=9;z++) merged.zones[z]+=(src.zones?.[z]||0);
+    });
+    DB.stats[LC.mid][LC.pid] = merged;
+  }
+  saveDB();
+}
+
+// ═══════════════════════════════════════════════════════
+// SCORE TRACKING
+// ═══════════════════════════════════════════════════════
+function cScore(side){
+  const i = LC.set-1;
+  if(side==='h') LC.hs[i]++; else LC.as[i]++;
+  const winner = isSetWon(LC.hs[i],LC.as[i],LC.set);
+  if(winner){
+    if(winner==='h') LC.homeSetsWon++; else LC.awaySetsWon++;
+    const wName = winner==='h'?document.getElementById('c-home').textContent:document.getElementById('c-away').textContent;
+    toast('🏆 Set '+LC.set+' → '+wName);
+    // Auto-save set stats
+    autoSave();
+    // Check match winner
+    if(LC.homeSetsWon===3||LC.awaySetsWon===3){
+      const mWinner = LC.homeSetsWon===3?document.getElementById('c-home').textContent:document.getElementById('c-away').textContent;
+      setTimeout(()=>toast('🏆🏆 '+mWinner+' wins the match!'),700);
+      const m = DB.matches.find(x=>x.id===LC.mid);
+      if(m){ m.status='completed'; m.hs=LC.homeSetsWon; m.as=LC.awaySetsWon; saveDB(); }
+    } else if(LC.set<5){
+      setTimeout(()=>{
+        const next = LC.set+1;
+        document.querySelectorAll('.stab').forEach((b,i)=>b.classList.toggle('active',i===next-1));
+        LC.set=next;
+        cUpdateScore();
+        toast('▶ Set '+next+' — First to '+setTarget(next));
+      },900);
+    }
+  }
+  cUpdateScore();
+}
+
+function cSetChange(n,btn){
+  LC.set=n;
+  document.querySelectorAll('.stab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  cUpdateScore();
+  cRefresh();
+}
+
+function cUpdateScore(){
+  const i=LC.set-1;
+  const h=LC.hs[i]||0, a=LC.as[i]||0;
+  const target=setTarget(LC.set);
+  const shBtn=document.getElementById('c-sh'), saBtn=document.getElementById('c-sa');
+  shBtn.textContent=h; saBtn.textContent=a;
+  shBtn.style.background=(h>=target-1)?'var(--red)':'var(--gold)';
+  shBtn.style.color=(h>=target-1)?'white':'var(--navy)';
+  saBtn.style.background=(a>=target-1)?'var(--red)':'var(--navy3)';
+  document.getElementById('c-sets').textContent=LC.homeSetsWon+'–'+LC.awaySetsWon;
+  document.getElementById('c-target').textContent='First to '+target;
+  // Set pills
+  let pills='';
+  for(let j=0;j<5;j++){
+    if(LC.hs[j]>0||LC.as[j]>0){
+      const w=isSetWon(LC.hs[j],LC.as[j],j+1);
+      pills+='<span class="set-pill'+(w?' won':'')+'">S'+(j+1)+' '+LC.hs[j]+'–'+LC.as[j]+'</span>';
+    }
+  }
+  document.getElementById('c-pills').innerHTML=pills;
+}
+
+// ═══════════════════════════════════════════════════════
+// REFRESH UI
+// ═══════════════════════════════════════════════════════
+function cRefresh(){
+  if(!LC.pid) return;
+  const s = cGet();
+  ['atkKills','blkSolid','srvAces','digSuccess','rcvPerfect','setAssists',
+   'atkErrors','srvErrors','rcvErrors','rcvPositive','rcvNegative','blkErrors'].forEach(f=>{
+    const el=document.getElementById('c-'+f); if(el) el.textContent=s[f]||0;
+  });
+  document.getElementById('c-ls-pts').textContent=s.points||0;
+  document.getElementById('c-ls-kl').textContent=s.atkKills||0;
+  document.getElementById('c-ls-bk').textContent=s.blkSolid||0;
+  document.getElementById('c-ls-ac').textContent=s.srvAces||0;
+  document.getElementById('c-ppts').textContent=s.points||0;
+  document.getElementById('c-eff').textContent=s.atkAttempts>0?eff(s)+'%':'–';
+  document.getElementById('c-srv').textContent=s.srvTotal>0?srvR(s)+'%':'–';
+  document.getElementById('c-rcv').textContent=s.rcvTotal>0?rcvR(s)+'%':'–';
+  document.getElementById('c-per').textContent=per(s);
+  updateZoneBtns();
+}
+
+// ═══════════════════════════════════════════════════════
+// ATTACK ZONES
+// ═══════════════════════════════════════════════════════
+function buildZones(){
+  const wrap = document.getElementById('c-zones');
+  wrap.innerHTML='';
+  const layout=[[7,8,9],[4,5,6],[1,2,3]];
+  layout.forEach(row=>{
+    row.forEach(z=>{
+      const btn=document.createElement('button');
+      btn.className='zone-btn';
+      btn.id='zone-'+z;
+      btn.innerHTML='<span class="zv" id="zv-'+z+'">0</span><span class="zl">Z'+z+'</span>';
+      btn.onclick=()=>cZone(z);
+      wrap.appendChild(btn);
+    });
+  });
+  const net=document.createElement('div');
+  net.className='zone-net'; net.textContent='← NET →';
+  wrap.appendChild(net);
+}
+
+function updateZoneBtns(){
+  if(!LC.pid) return;
+  const s=cGet(); if(!s.zones) return;
+  const vals=Object.values(s.zones), maxV=Math.max(...vals,1);
+  for(let z=1;z<=9;z++){
+    const vEl=document.getElementById('zv-'+z);
+    const btn=document.getElementById('zone-'+z);
+    if(!vEl||!btn) continue;
+    const v=s.zones[z]||0;
+    vEl.textContent=v;
+    const a=Math.max(0.06,v/maxV);
+    btn.style.background='rgba(245,200,66,'+a.toFixed(2)+')';
+    btn.style.borderColor=v>0?'var(--gold)':'var(--border2)';
+    btn.querySelector('.zv').style.color=v>0?'var(--navy)':'var(--gold)';
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// SAVE
+// ═══════════════════════════════════════════════════════
+function cSaveSet(){
+  if(!LC.mid||!LC.pid){ toast('Select match & player',true); return; }
+  autoSave();
+  pushToDisplay();
+  toast('💾 Set '+LC.set+' saved & pushed!');
+}
+
+function confirmSaveMatch(){
+  document.getElementById('confirm-title').textContent='Save & End Match?';
+  document.getElementById('confirm-msg').textContent=
+    'This will save all stats for all players and mark the match as completed. '+
+    'Data will be pushed to the Display Board.';
+  document.getElementById('confirm-yes').onclick=cSaveMatch;
+  document.getElementById('confirm-overlay').classList.add('open');
+}
+
+function cSaveMatch(){
+  closeConfirm();
+  if(!LC.mid){ toast('No match selected',true); return; }
+  if(!DB.stats[LC.mid]) DB.stats[LC.mid]={};
+  // Merge ALL players across ALL sets
+  Object.keys(LC.sets).forEach(sn=>{
+    Object.keys(LC.sets[sn]).forEach(pid=>{
+      if(!DB.stats[LC.mid][pid]) DB.stats[LC.mid][pid]=newStats();
+      const dest=DB.stats[LC.mid][pid];
+      const src=LC.sets[sn][pid];
+      ['atkAttempts','atkKills','atkErrors','blkAttempts','blkSolid','blkErrors',
+       'srvTotal','srvAces','srvErrors','rcvTotal','rcvPerfect','rcvPositive','rcvNegative',
+       'rcvErrors','setTotal','setAssists','setErrors','digTotal','digSuccess','digErrors',
+       'points','clutch'].forEach(k=>dest[k]=(dest[k]||0)+(src[k]||0));
+      for(let z=1;z<=9;z++) dest.zones[z]+=(src.zones?.[z]||0);
+    });
+  });
+  // Update match result
+  const m=DB.matches.find(x=>x.id===LC.mid);
+  if(m){
+    m.hs=LC.homeSetsWon; m.as=LC.awaySetsWon;
+    if(LC.homeSetsWon===3||LC.awaySetsWon===3) m.status='completed';
+    else if(LC.homeSetsWon>0||LC.awaySetsWon>0) m.status='live';
+  }
+  saveDB();
+  pushToDisplay();
+  toast('✔ Match saved & pushed to Display Board!');
+  // Return to setup after 2s
+  setTimeout(()=>{
+    LC={mid:'',pid:'',set:1,sets:{},hs:[0,0,0,0,0],as:[0,0,0,0,0],homeSetsWon:0,awaySetsWon:0,hist:[]};
+    document.getElementById('collector').style.display='none';
+    document.getElementById('push-btn').style.display='none';
+    document.getElementById('setup-screen').style.display='flex';
+    loadDB(); populateSetup();
+  },2000);
+}
+
+// ═══════════════════════════════════════════════════════
+// PUSH TO DISPLAY BOARD
+// ═══════════════════════════════════════════════════════
+const _ch = (typeof BroadcastChannel!=='undefined') ? new BroadcastChannel('dcvdb_sync') : null;
+
+function pushToDisplay(){
+  saveDB();
+  if(_ch){
+    _ch.postMessage({type:'push',ts:Date.now(),
+      live:{mid:LC.mid,set:LC.set,hs:LC.hs,as:LC.as,homeSetsWon:LC.homeSetsWon,awaySetsWon:LC.awaySetsWon}
+    });
+  }
+}
+
+function pushAll(){
+  const btn=document.getElementById('push-btn');
+  const icon=document.getElementById('push-icon');
+  const lbl=document.getElementById('push-lbl');
+  autoSave();
+  pushToDisplay();
+  btn.style.background='linear-gradient(135deg,#f5c842,#e6b830)';
+  icon.textContent='✔'; lbl.textContent='Pushed!';
+  setTimeout(()=>{
+    btn.style.background='linear-gradient(135deg,var(--teal),var(--teal2))';
+    icon.textContent='📺'; lbl.textContent='Push Live';
+  },1600);
+  toast('📺 Pushed to Display Board!');
+}
+
+// ═══════════════════════════════════════════════════════
+// CONFIRM OVERLAY
+// ═══════════════════════════════════════════════════════
+function closeConfirm(){
+  document.getElementById('confirm-overlay').classList.remove('open');
+}
+
+// ═══════════════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════════════
+let _tt;
+function toast(msg,err){
+  const el=document.getElementById('toast');
+  el.textContent=msg;
+  el.className='show'+(err?' err':'');
+  clearTimeout(_tt);
+  _tt=setTimeout(()=>el.className='',2000);
+}
+
+// ═══════════════════════════════════════════════════════
+// KEYBOARD (for desktop use)
+// ═══════════════════════════════════════════════════════
+document.addEventListener('keydown',e=>{
+  if(document.getElementById('collector').style.display==='none') return;
+  const map={k:'atkKills',b:'blkSolid',a:'srvAces',d:'digSuccess',r:'rcvPerfect',s:'setAssists'};
+  if(map[e.key]){ cStat(map[e.key],1,{atkKills:'atkAttempts',blkSolid:'blkAttempts',srvAces:'srvTotal',digSuccess:'digTotal',rcvPerfect:'rcvTotal',setAssists:'setTotal'}[map[e.key]],1); }
+  if(e.key==='z'||e.key==='Z') cUndo();
+  if(e.key==='h') cScore('h');
+  if(e.key==='j') cScore('a');
+});
+
+// ═══════════════════════════════════════════════════════
+// START
+// ═══════════════════════════════════════════════════════
+init();
+</script>
+</body>
+</html>
