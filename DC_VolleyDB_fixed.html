@@ -23,7 +23,6 @@ html,body{min-height:100%;background:var(--navy);color:var(--text);font-family:'
 .nav::-webkit-scrollbar{height:2px}.nav::-webkit-scrollbar-thumb{background:var(--border)}
 .nb{padding:6px 11px;border-radius:6px;border:none;background:transparent;color:var(--text2);cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap;transition:all .15s}
 .nb:hover{background:var(--navy3);color:var(--text)}.nb.active{background:var(--gold);color:var(--navy)}
-.offline{padding:3px 8px;background:#0a2820;border:1px solid var(--teal);border-radius:10px;font-size:10px;color:var(--teal);font-weight:700;white-space:nowrap}
 /* LAYOUT */
 .main{flex:1;padding:14px 18px;max-width:1300px;width:100%;margin:0 auto}
 .page{display:none;flex-direction:column;gap:12px}.page.active{display:flex}
@@ -288,10 +287,63 @@ canvas{max-width:100%;display:block}
 .db-dot{width:8px;height:8px;border-radius:50%;background:var(--border);border:none;cursor:pointer;padding:0;transition:all .2s;flex-shrink:0}
 .db-dot.active{background:var(--gold);width:20px;border-radius:4px}
 .db-dot:hover{background:var(--text2)}
-/* Large slideshow card */
-.dbp-card-large{max-width:340px;width:100%}
-.dbp-photo-lg{width:110px!important;height:110px!important;margin:0 auto 10px!important}
-.dbp-avatar-lg{width:110px!important;height:110px!important;font-size:32px!important;margin:0 auto 10px!important}
+/* Large slideshow card — photo breaks out left; details panel same footprint as photo */
+.dbp-card-large{max-width:min(720px,96vw);width:100%;overflow:visible}
+.dbp-card-large .dbp-body.dbp-body-row{
+  display:grid!important;
+  grid-template-columns:1fr 1fr;
+  gap:18px;
+  align-items:stretch;
+  overflow:visible;
+  padding:18px 20px 18px 8px;
+}
+.dbp-col-burst{
+  overflow:visible!important;
+  display:flex!important;
+  flex-direction:column;
+  align-items:stretch!important;
+  align-self:stretch;
+  height:100%;
+  min-height:0;
+  position:relative;
+}
+.dbp-card-large .dbp-photo-lg,.dbp-card-large .dbp-avatar-lg{
+  width:100%!important;
+  height:100%!important;
+  min-height:0;
+  flex:1 1 auto;
+  max-width:none!important;
+  max-height:none!important;
+  margin:0!important;
+  position:relative;
+  left:0;
+  z-index:2;
+  border-radius:12px;
+  object-fit:cover;
+  box-shadow:0 10px 28px rgba(0,0,0,.4);
+}
+.dbp-card-large .dbp-avatar-lg{
+  font-size:38px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+}
+.dbp-card-large .dbp-col-right{
+  min-height:0;
+  box-sizing:border-box;
+  background:var(--card2);
+  border:1px solid var(--border2);
+  border-radius:12px;
+  padding:12px 14px;
+  display:flex;
+  flex-direction:column;
+}
+.dbp-body-row{flex-direction:row!important;align-items:flex-start;gap:14px}
+.dbp-col-left{flex-shrink:0;display:flex;flex-direction:column;align-items:center}
+.dbp-col-right{flex:1;min-width:0;display:flex;flex-direction:column}
+.dbp-body-row .dbp-photo,.dbp-body-row .dbp-avatar{margin-bottom:0!important}
+.dbp-body-row .dbp-jersey,.dbp-body-row .dbp-name,.dbp-body-row .dbp-team{text-align:left}
+.dbp-body-row .dbp-tags{justify-content:flex-start}
 .dbp-jersey{text-align:center;font-size:11px;color:var(--text3);font-weight:700;margin-bottom:2px;letter-spacing:.5px}
 /* Make all cards same height via flex column */
 .dbp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;align-items:stretch}
@@ -308,6 +360,11 @@ canvas{max-width:100%;display:block}
 
 /* SCROLLBAR */
 ::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:var(--card2)}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+/* Display Board only (new tab, ?embed=display) — no header chrome */
+html.embed-display .topbar{display:none!important}
+html.embed-display .footer{display:none!important}
+html.embed-display .main{max-width:none;width:100%;flex:1}
+html.embed-display body{min-height:100vh;display:flex;flex-direction:column}
 </style>
 </head>
 <body>
@@ -327,12 +384,11 @@ canvas{max-width:100%;display:block}
     <button class="nb" onclick="go('matches')">📋 Matches</button>
     <button class="nb" onclick="go('analytics')">📈 Analytics</button>
     <button class="nb" onclick="go('league')">🏆 League Table</button>
-    <button class="nb" onclick="go('display')">📺 Display Board</button>
+    <button class="nb" onclick="openDisplayBoard()">📺 Display Board</button>
+    <button class="nb" onclick="window.open('DC_VolleyDB_ShowcaseDisplay.html','_blank')">📺 Showcase Display</button>
     <button class="nb" onclick="go('export')">💾 Export</button>
-    <button class="nb" onclick="go('schema')">🗄️ Schema</button>
   </nav>
-  <div class="offline">✓ OFFLINE</div>
-  <button id="push-btn" onclick="pushToDisplay()" style="padding:4px 11px;border-radius:7px;border:none;background:linear-gradient(135deg,#00c9a7,#00a88c);color:#0d1b2a;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:5px;transition:all .15s;flex-shrink:0" title="Send latest data to Display Board instantly">
+  <button id="push-btn" onclick="pushToDisplay()" style="padding:4px 11px;border-radius:7px;border:none;background:linear-gradient(135deg,#00c9a7,#00a88c);color:#0d1b2a;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:5px;transition:all .15s;flex-shrink:0" title="Save data + notify other tabs (Live Collector at live.html). TV: open Display Board (new tab, no header).">
     <span id="push-icon">📺</span><span id="push-label">Push to Display</span>
   </button>
 </div>
@@ -341,6 +397,10 @@ canvas{max-width:100%;display:block}
 
 <!-- DASHBOARD -->
 <div class="page active" id="page-dashboard">
+  <div class="fb" style="margin-bottom:10px;align-items:center">
+    <span style="font-size:12px;color:var(--text2)">Court-side stat entry (opens in a new tab)</span>
+    <button type="button" class="btn bteal bsm" onclick="openLiveCollector()">📱 Open Live Collector</button>
+  </div>
   <div class="g4" id="db-metrics"></div>
   <div class="g2">
     <div class="csm"><div class="ctitle">🏐 Recent Matches</div><div id="db-recent"></div></div>
@@ -549,7 +609,7 @@ canvas{max-width:100%;display:block}
 
 <!-- SCHEMA -->
 <div class="page" id="page-schema">
-  <div class="c2"><div class="ctitle">🗄️ DC_VolleyDB Schema — FIVB Indoor</div><div style="font-size:12px;color:var(--text2);line-height:1.7">6 normalized tables · SQLite compatible · Offline-first · FIVB standard stats</div></div>
+  <div class="c2"><div class="ctitle">🗄️ DC_VolleyDB Schema — FIVB Indoor</div><div style="font-size:12px;color:var(--text2);line-height:1.7">6 normalized tables · SQLite compatible · Local-first · FIVB standard stats</div></div>
   <div class="g2">
     <div class="csm" style="border-color:#4a9eff44"><div class="ctitle" style="color:var(--blue)">🔵 players</div><div id="s-players"></div></div>
     <div class="csm" style="border-color:#2ed57344"><div class="ctitle" style="color:var(--green)">🟢 teams</div><div id="s-teams"></div></div>
@@ -562,7 +622,7 @@ canvas{max-width:100%;display:block}
     <div class="ctitle">💻 Tech Stack</div>
     <div class="g3">
       <div style="padding:11px;background:var(--navy3);border-radius:7px;border:1px solid var(--border2)"><div style="font-size:9px;color:var(--text3);text-transform:uppercase;font-weight:700">Mobile</div><div style="font-size:13px;font-weight:700;color:var(--teal);margin-top:2px">Flutter</div><div style="font-size:11px;color:var(--text2);margin-top:2px">iOS + Android</div></div>
-      <div style="padding:11px;background:var(--navy3);border-radius:7px;border:1px solid var(--border2)"><div style="font-size:9px;color:var(--text3);text-transform:uppercase;font-weight:700">Local DB</div><div style="font-size:13px;font-weight:700;color:var(--gold);margin-top:2px">SQLite + Drift</div><div style="font-size:11px;color:var(--text2);margin-top:2px">Full offline</div></div>
+      <div style="padding:11px;background:var(--navy3);border-radius:7px;border:1px solid var(--border2)"><div style="font-size:9px;color:var(--text3);text-transform:uppercase;font-weight:700">Local DB</div><div style="font-size:13px;font-weight:700;color:var(--gold);margin-top:2px">SQLite + Drift</div><div style="font-size:11px;color:var(--text2);margin-top:2px">Device-local</div></div>
       <div style="padding:11px;background:var(--navy3);border-radius:7px;border:1px solid var(--border2)"><div style="font-size:9px;color:var(--text3);text-transform:uppercase;font-weight:700">Cloud</div><div style="font-size:13px;font-weight:700;color:var(--blue);margin-top:2px">Firebase</div><div style="font-size:11px;color:var(--text2);margin-top:2px">Real-time sync</div></div>
     </div>
   </div>
@@ -795,80 +855,40 @@ canvas{max-width:100%;display:block}
 <script>
 // ═══════════════════════════════════════════════════════════
 // DC_VolleyDB · Core Engine · © DC_Volley
-// All data stored in localStorage — 100% offline
+// Persistence: Firebase Realtime Database (`appData`); localStorage removed
 // ═══════════════════════════════════════════════════════════
 
 document.getElementById('fy').textContent = new Date().getFullYear();
+try{
+  if(new URLSearchParams(window.location.search).get('embed')==='display')
+    document.documentElement.classList.add('embed-display');
+}catch(e){}
 
-// ── STORAGE ───────────────────────────────────────────────
+// ── STORAGE (compat API; persistence is Firebase via saveDB → _firebasePushAppData) ──
 const ST = {
-  save: (k,v) => { try { localStorage.setItem('dcv_'+k, JSON.stringify(v)); } catch(e){} },
-  load: (k,d) => { try { const v=localStorage.getItem('dcv_'+k); return v ? JSON.parse(v) : d; } catch(e){ return d; } },
-  clear: () => { Object.keys(localStorage).filter(k=>k.startsWith('dcv_')).forEach(k=>localStorage.removeItem(k)); }
+  save: (k,v) => {},
+  load: (k,d) => d,
+  clear: () => {}
 };
-// 🔥 Firebase Integration — allow ES module to mirror writes into localStorage
+// 🔥 Firebase Integration — ST exposed for modules that still reference window.ST
 window.ST = ST;
 
-// ── DEFAULT DATA ──────────────────────────────────────────
-const DEF_TEAMS = [
-  {id:'T001',name:'Mumbai Spikes',coach:'Ravi Kumar',city:'Mumbai',cat:'Men',tourn:'National League 2025'},
-  {id:'T002',name:'Delhi Thunder',coach:'Anand Sharma',city:'Delhi',cat:'Men',tourn:'National League 2025'},
-  {id:'T003',name:'Bangalore Queens',coach:'Sunita Rao',city:'Bangalore',cat:'Women',tourn:'National League 2025'},
-  {id:'T004',name:'Chennai Storm',coach:'Pradeep Roy',city:'Chennai',cat:'Women',tourn:'National League 2025'},
-];
-const DEF_PLAYERS = [
-  {id:'P001',name:'Rahul Sharma',jersey:7,team:'T001',pos:'OH',gen:'M',ht:192,age:24,nat:'Indian',photo:''},
-  {id:'P002',name:'Arjun Mehta',jersey:11,team:'T001',pos:'MB',gen:'M',ht:198,age:26,nat:'Indian',photo:''},
-  {id:'P003',name:'Vikram Patel',jersey:4,team:'T001',pos:'S',gen:'M',ht:185,age:22,nat:'Indian',photo:''},
-  {id:'P004',name:'Santosh Kumar',jersey:15,team:'T001',pos:'L',gen:'M',ht:174,age:21,nat:'Indian',photo:''},
-  {id:'P005',name:'Dev Krishnan',jersey:1,team:'T002',pos:'OP',gen:'M',ht:195,age:25,nat:'Indian',photo:''},
-  {id:'P006',name:'Rohit Singh',jersey:9,team:'T002',pos:'OH',gen:'M',ht:188,age:23,nat:'Indian',photo:''},
-  {id:'P007',name:'Priya Sharma',jersey:12,team:'T003',pos:'MB',gen:'F',ht:181,age:22,nat:'Indian',photo:''},
-  {id:'P008',name:'Kavya Nair',jersey:3,team:'T003',pos:'S',gen:'F',ht:174,age:20,nat:'Indian',photo:''},
-  {id:'P009',name:'Anitha Rao',jersey:8,team:'T004',pos:'OH',gen:'F',ht:180,age:23,nat:'Indian',photo:''},
-  {id:'P010',name:'Sunita Bhat',jersey:6,team:'T004',pos:'L',gen:'F',ht:165,age:21,nat:'Indian',photo:''},
-];
-const DEF_MATCHES = [
-  {id:'M001',home:'T001',away:'T002',date:'2025-03-15',time:'18:00',tourn:'National League 2025',venue:'NSCI Dome, Mumbai',hs:2,as:1,status:'completed',cat:'Men'},
-  {id:'M002',home:'T003',away:'T004',date:'2025-03-22',time:'17:00',tourn:'National League 2025',venue:'Kanteerava Stadium, Bangalore',hs:3,as:2,status:'completed',cat:'Women'},
-  {id:'M003',home:'T001',away:'T003',date:'2025-04-10',time:'19:00',tourn:'National League 2025',venue:'NSCI Dome, Mumbai',hs:0,as:0,status:'upcoming',cat:'Mixed'},
-];
+// ── DEFAULT DATA (empty — add teams / players / matches in the app) ──
+const DEF_TEAMS = [];
+const DEF_PLAYERS = [];
+const DEF_MATCHES = [];
 
 // ── APP STATE ─────────────────────────────────────────────
 let DB = {
-  teams:   ST.load('teams',   DEF_TEAMS),
-  players: ST.load('players', DEF_PLAYERS),
-  matches: ST.load('matches', DEF_MATCHES),
-  stats:   ST.load('stats',   {}),
+  teams:   [...DEF_TEAMS],
+  players: [...DEF_PLAYERS],
+  matches: [...DEF_MATCHES],
+  stats:   {},
 };
 // 🔥 Firebase Integration — current DB reference for ES module (survives `DB = …` reassignment in import)
 window._firebaseGetDbObject = () => DB;
 window._firebaseApplyingRemote = false;
 
-// Generate sample stats on first run
-if (Object.keys(DB.stats).length === 0) {
-  DB.matches.filter(m=>m.status==='completed').forEach(m=>{
-    DB.stats[m.id] = {};
-    DB.players.filter(p=>p.team===m.home||p.team===m.away).forEach(p=>{
-      const s = newStats();
-      s.atkAttempts=ri(10,28); s.atkKills=ri(3,Math.floor(s.atkAttempts*.65));
-      s.atkErrors=ri(0,Math.floor(s.atkAttempts*.18));
-      s.blkAttempts=ri(2,10); s.blkSolid=ri(0,Math.floor(s.blkAttempts*.45)); s.blkErrors=ri(0,2);
-      s.srvTotal=ri(8,20); s.srvAces=ri(0,4); s.srvErrors=ri(0,3);
-      s.rcvTotal=ri(5,24); s.rcvPerfect=ri(1,Math.floor(s.rcvTotal*.45));
-      s.rcvPositive=ri(1,Math.floor(s.rcvTotal*.38)); s.rcvNegative=ri(0,3); s.rcvErrors=ri(0,2);
-      s.setTotal=ri(2,38); s.setAssists=ri(0,Math.floor(s.setTotal*.65)); s.setErrors=ri(0,2);
-      s.digTotal=ri(3,18); s.digSuccess=ri(1,Math.floor(s.digTotal*.78)); s.digErrors=ri(0,2);
-      s.points = s.atkKills+s.blkSolid+s.srvAces;
-      s.clutch = ri(0,3);
-      for(let z=1;z<=9;z++) s.zones[z]=ri(0,Math.max(1,Math.ceil(s.atkKills/4)));
-      DB.stats[m.id][p.id] = s;
-    });
-  });
-  saveDB();
-}
-
-function ri(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
 function saveDB(){
   ST.save('teams',DB.teams); ST.save('players',DB.players); ST.save('matches',DB.matches); ST.save('stats',DB.stats);
   // 🔥 Firebase Integration — push local changes to Realtime DB (skipped while applying remote snapshot)
@@ -878,6 +898,19 @@ function saveDB(){
 // ── PUSH TO DISPLAY ───────────────────────────────────────
 const _pushCh = (typeof BroadcastChannel !== 'undefined') ? new BroadcastChannel('dcvdb_sync') : null;
 
+function openLiveCollector(){
+  var path='live.html';
+  if(window.location.protocol==='file:'){
+    var leaf=(window.location.pathname||'').split('/').pop().toLowerCase();
+    path=(leaf==='index.html'||leaf==='live.html')?'live.html':'DC_VolleyDB_LiveCollector.html';
+  }
+  window.open(new URL(path,window.location.href).href,'_blank','noopener');
+}
+function openDisplayBoard(){
+  var u=new URL(window.location.href);
+  u.searchParams.set('embed','display');
+  window.open(u.toString(),'_blank','noopener');
+}
 function pushToDisplay(){
   saveDB();
   const btn   = document.getElementById('push-btn');
@@ -932,6 +965,18 @@ function tn(tid){ return DB.teams.find(t=>t.id===tid)?.name||tid; }
 function pc(pos){ return {OH:'#5ab4ff',MB:'#b89afa',S:'#8ee060',L:'#f5c842',OP:'#f472b6'}[pos]||'#9baec2'; }
 function ec(v){ return v>40?'#2ed573':v>20?'#f5c842':'#ff4757'; }
 function fd(d){ if(!d) return ''; try{ return new Date(d+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}); }catch(e){ return d; } }
+function matchScheduledMs(m){
+  if(!m||!m.date) return 0;
+  const raw=(m.time!=null&&String(m.time).trim())?String(m.time).trim():'18:00';
+  const parts=raw.split(':');
+  let hh=parseInt(parts[0],10); if(isNaN(hh)) hh=0;
+  let mm=parseInt(parts[1],10); if(isNaN(mm)) mm=0;
+  hh=Math.min(23,Math.max(0,hh)); mm=Math.min(59,Math.max(0,mm));
+  const pad=n=>(n<10?'0':'')+n;
+  const iso=String(m.date).trim()+'T'+pad(hh)+':'+pad(mm)+':00';
+  const t=new Date(iso).getTime();
+  return isNaN(t)?0:t;
+}
 
 // ── TOAST ─────────────────────────────────────────────────
 let _tt;
@@ -982,6 +1027,24 @@ function firebaseRefreshActivePage(){
   if(PAGE_FNS[id]) PAGE_FNS[id]();
 }
 window._firebaseRefreshUI = firebaseRefreshActivePage;
+if(!window.__dcvMatchStatusTimer){
+  window.__dcvMatchStatusTimer=setInterval(()=>{
+    const prev=JSON.stringify(DB.matches.map(x=>x.id+':'+x.status));
+    autoUpdateMatchStatus();
+    if(JSON.stringify(DB.matches.map(x=>x.id+':'+x.status))!==prev && typeof firebaseRefreshActivePage==='function') firebaseRefreshActivePage();
+  },30000);
+}
+// Same-browser sync: when Live Collector (or another tab) posts push, pull Firebase and refresh the active page
+if(_pushCh){
+  _pushCh.onmessage = (ev)=>{
+    if(!ev.data || ev.data.type !== 'push') return;
+    if(typeof window.__dcvPullAppDataFromFirebase==='function'){
+      Promise.resolve(window.__dcvPullAppDataFromFirebase()).finally(()=>firebaseRefreshActivePage());
+    }else{
+      firebaseRefreshActivePage();
+    }
+  };
+}
 function go(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
@@ -993,6 +1056,7 @@ function go(id){
 
 // ═══════════════════════ DASHBOARD ════════════════════════
 function renderDB(){
+  autoUpdateMatchStatus();
   const totalPts=DB.players.reduce((s,p)=>s+(agg(p.id).points||0),0);
   const totalKills=DB.players.reduce((s,p)=>s+(agg(p.id).atkKills||0),0);
   const totalBlk=DB.players.reduce((s,p)=>s+(agg(p.id).blkSolid||0),0);
@@ -1112,6 +1176,7 @@ function scDetail(pid){ selPid=pid; go('players'); }
 // ═══════════════════════ LIVE TRACKER ═════════════════════
 let LT={mid:'',pid:'',set:1,sets:{},hs:[0,0,0,0,0],as:[0,0,0,0,0],hist:[],homeSetsWon:0,awaySetsWon:0};
 function renderLV(){
+  autoUpdateMatchStatus();
   const sel=document.getElementById('lt-match'); const sv=sel.value;
   sel.innerHTML='<option value="">— Select Match —</option>'+DB.matches.map(m=>'<option value="'+m.id+'">'+tn(m.home)+' vs '+tn(m.away)+' — '+fd(m.date)+'</option>').join('');
   if(sv) sel.value=sv;
@@ -1340,6 +1405,7 @@ function doAddPlayer(){
   renderPL();
 }
 function renderPL(){
+  autoUpdateMatchStatus();
   const tf=document.getElementById('pl-team').value;
   const pf=document.getElementById('pl-pos').value;
   const gf=document.getElementById('pl-gen').value;
@@ -1527,12 +1593,13 @@ function openAddTeam(){
 function doAddTeam(){
   const name=document.getElementById('at-name').value.trim();
   if(!name){ showErr('at-err','Team name is required'); return; }
-  if(DB.teams.find(t=>t.name.toLowerCase()===name.toLowerCase())){ showErr('at-err','Team "'+name+'" already exists'); return; }
+  const cat=document.getElementById('at-cat').value;
+  if(DB.teams.find(t=>t.name.toLowerCase()===name.toLowerCase() && (t.cat||'')===(cat||''))){ showErr('at-err','Team "'+name+'" already exists in this category'); return; }
   const t={
     id:'T'+Date.now(), name,
     coach:document.getElementById('at-coach').value.trim(),
     city:document.getElementById('at-city').value.trim(),
-    cat:document.getElementById('at-cat').value,
+    cat:cat,
     tourn:document.getElementById('at-tourn').value.trim()
   };
   DB.teams.push(t); saveDB();
@@ -1620,16 +1687,15 @@ function doAddMatch(){
   renderMT();
 }
 function autoUpdateMatchStatus(){
-  const today = new Date().toISOString().split('T')[0];
   let changed = false;
+  const now = Date.now();
   DB.matches.forEach(m=>{
-    if(m.status==='upcoming' && m.date < today){
+    if(m.status==='upcoming' && now >= matchScheduledMs(m)){
       m.status='live'; changed=true;
     }
-    // If match date+time is more than 4 hours ago, mark completed if sets recorded
     if(m.status==='live'){
-      const matchDT = new Date(m.date+'T'+(m.time||'18:00'));
-      const hoursSince = (Date.now()-matchDT)/3600000;
+      const matchDT = new Date(matchScheduledMs(m));
+      const hoursSince = (Date.now()-matchDT.getTime())/3600000;
       if(hoursSince>4 && (m.hs>0||m.as>0)){ m.status='completed'; changed=true; }
     }
   });
@@ -2242,6 +2308,7 @@ function dbView(view, btn) {
 }
 
 function renderDisplay() {
+  autoUpdateMatchStatus();
   const tSel = document.getElementById('db-team-f');
   const tv = tSel ? tSel.value : '';
   if (tSel) {
@@ -2323,7 +2390,16 @@ function buildPlayerCard(p, large) {
   card.appendChild(banner);
 
   const body = document.createElement('div');
-  body.className = 'dbp-body';
+  body.className = large ? 'dbp-body dbp-body-row' : 'dbp-body';
+  let colL = null, colR = null;
+  if (large) {
+    colL = document.createElement('div');
+    colL.className = 'dbp-col-left dbp-col-burst';
+    colR = document.createElement('div');
+    colR.className = 'dbp-col-right';
+  }
+  const photoHost = large ? colL : body;
+  const detailHost = large ? colR : body;
 
   // Photo / avatar
   if (p.photo) {
@@ -2340,7 +2416,7 @@ function buildPlayerCard(p, large) {
       av.textContent = '#' + p.jersey;
       this.parentNode.replaceChild(av, this);
     };
-    body.appendChild(img);
+    photoHost.appendChild(img);
   } else {
     const av = document.createElement('div');
     av.className = 'dbp-avatar' + (large ? ' dbp-avatar-lg' : '');
@@ -2348,26 +2424,26 @@ function buildPlayerCard(p, large) {
     av.style.color       = posClr;
     av.style.borderColor = posClr;
     av.textContent = '#' + p.jersey;
-    body.appendChild(av);
+    photoHost.appendChild(av);
   }
 
   // Jersey number label
   const jerseyLbl = document.createElement('div');
   jerseyLbl.className = 'dbp-jersey';
   jerseyLbl.textContent = '#' + p.jersey;
-  body.appendChild(jerseyLbl);
+  detailHost.appendChild(jerseyLbl);
 
   // Name — clamped, never overflows
   const nm = document.createElement('div');
   nm.className = 'dbp-name';
   nm.textContent = p.name;
-  body.appendChild(nm);
+  detailHost.appendChild(nm);
 
   // Team name
   const tm = document.createElement('div');
   tm.className = 'dbp-team';
   tm.textContent = tn(p.team);
-  body.appendChild(tm);
+  detailHost.appendChild(tm);
 
   // Tags row
   const tags = document.createElement('div');
@@ -2388,7 +2464,7 @@ function buildPlayerCard(p, large) {
     ptsBadge.textContent = s.points + ' pts';
     tags.appendChild(ptsBadge);
   }
-  body.appendChild(tags);
+  detailHost.appendChild(tags);
 
   // Stats row: Kills | Blocks | Aces | Pts
   const statsRow = document.createElement('div');
@@ -2411,7 +2487,7 @@ function buildPlayerCard(p, large) {
     cell.appendChild(sv); cell.appendChild(sl);
     statsRow.appendChild(cell);
   });
-  body.appendChild(statsRow);
+  detailHost.appendChild(statsRow);
 
   // Performance bars
   const barsWrap = document.createElement('div');
@@ -2431,12 +2507,12 @@ function buildPlayerCard(p, large) {
       '<div class="perf-bar"><div class="perf-fill" style="width:' + Math.min(100, b.val) + '%;background:' + b.color + '"></div></div>';
     barsWrap.appendChild(row);
   });
-  body.appendChild(barsWrap);
+  detailHost.appendChild(barsWrap);
 
   // Info grid: Height, Age, Nation, PER
   const spacer = document.createElement('div');
   spacer.className = 'dbp-spacer';
-  body.appendChild(spacer);
+  detailHost.appendChild(spacer);
 
   const infoGrid = document.createElement('div');
   infoGrid.className = 'dbp-info';
@@ -2454,8 +2530,12 @@ function buildPlayerCard(p, large) {
       '<span class="dbp-info-val">' + item.val + '</span>';
     infoGrid.appendChild(cell);
   });
-  body.appendChild(infoGrid);
+  detailHost.appendChild(infoGrid);
 
+  if (large) {
+    body.appendChild(colL);
+    body.appendChild(colR);
+  }
   card.appendChild(body);
   return card;
 }
@@ -2504,7 +2584,7 @@ function renderDBPlayers() {
 
   // ── SLIDESHOW STAGE ────
   const ssWrap = document.createElement('div');
-  ssWrap.style.cssText = 'background:var(--card2);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:14px';
+  ssWrap.style.cssText = 'background:var(--card2);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:14px;overflow:visible';
 
   // Header row
   const ssHead = document.createElement('div');
@@ -2554,7 +2634,7 @@ function renderDBPlayers() {
   // Slide stage (single large card centered)
   const stage = document.createElement('div');
   stage.id = 'db-slide-stage';
-  stage.style.cssText = 'display:flex;justify-content:center;min-height:460px;align-items:flex-start';
+  stage.style.cssText = 'display:flex;justify-content:center;min-height:460px;align-items:flex-start;overflow:visible;padding:0 28px;box-sizing:border-box';
   ssWrap.appendChild(stage);
 
   // Dot indicators
@@ -2835,6 +2915,7 @@ let _dbCountdown = null;
 function renderDBMatches() {
   dbStopSlideshow();
   if (_dbCountdown) { clearInterval(_dbCountdown); _dbCountdown = null; }
+  autoUpdateMatchStatus();
   const teamF = (document.getElementById('db-team-f') || {}).value || '';
   const q     = ((document.getElementById('db-search') || {}).value || '').toLowerCase();
 
@@ -2881,13 +2962,20 @@ function renderDBMatches() {
     return;
   }
 
-  // Countdown
+  // Countdown (+ detect scheduled start for live transition)
   _dbCountdown = setInterval(() => {
+    const st0 = JSON.stringify(DB.matches.map(x => x.id + ':' + x.status));
+    autoUpdateMatchStatus();
+    if (JSON.stringify(DB.matches.map(x => x.id + ':' + x.status)) !== st0) {
+      const pd = document.getElementById('page-display');
+      if (pd && pd.classList.contains('active')) renderDisplay();
+      return;
+    }
     upcoming.forEach(m => {
       const el = document.getElementById('cd-' + m.id);
       if (!el) return;
-      const mt = new Date(m.date + 'T' + (m.time || '18:00') + ':00');
-      const diff = mt - new Date();
+      const mt = matchScheduledMs(m);
+      const diff = mt - Date.now();
       if (diff <= 0) { el.innerHTML = '<span style="color:var(--red);font-weight:800">Starting soon!</span>'; return; }
       const d = Math.floor(diff / 86400000);
       const h = Math.floor((diff % 86400000) / 3600000);
@@ -2985,20 +3073,36 @@ function buildMatchCard(m, type) {
 }
 
 // ═══════════════════════ INIT ═════════════════════════════
-renderDB();
+window.__dcvAfterHydrate = ()=>{ renderDB(); };
+(function(){
+  try{
+    if(new URLSearchParams(window.location.search).get('embed')!=='display') return;
+    document.documentElement.classList.add('embed-display');
+    var prev=window.__dcvAfterHydrate;
+    window.__dcvAfterHydrate=function(){
+      if(typeof prev==='function') prev();
+      try{ go('display'); }catch(err){}
+    };
+  }catch(e){}
+})();
 document.addEventListener('keydown',e=>{
-  if(e.altKey){const m={d:'dashboard',s:'showcase',l:'live',p:'players',t:'teams',m:'matches',a:'analytics',g:'league',b:'display',e:'export'};if(m[e.key]) go(m[e.key]);}
+  if(e.altKey){
+    if(e.key==='b'||e.key==='B'){ openDisplayBoard(); return; }
+    const m={d:'dashboard',s:'showcase',l:'live',p:'players',t:'teams',m:'matches',a:'analytics',g:'league',e:'export'};
+    if(m[e.key]) go(m[e.key]);
+  }
 });
 </script>
 <script type="module">
 // 🔥 Firebase Integration Start — Firebase v9+ modular SDK (CDN)
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
-import { getDatabase, ref, onValue, update, set, remove } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js';
+import { getDatabase, ref, onValue, update, set, remove, get } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js';
 
 const firebaseConfig = {
   apiKey: 'AIzaSyBzt0SJESJZczqGBPIflN-aLJg7co0qYCQ',
   authDomain: 'dc-volley-db.firebaseapp.com',
-  databaseURL: 'https://dc-volley-db-default-rtdb.firebaseio.com',
+  // Realtime Database URL (must match your instance — yours is asia-southeast1)
+  databaseURL: 'https://dc-volley-db-default-rtdb.asia-southeast1.firebasedatabase.app',
   projectId: 'dc-volley-db',
   storageBucket: 'dc-volley-db.firebasestorage.app',
   messagingSenderId: '210042105512',
@@ -3008,9 +3112,6 @@ const firebaseConfig = {
 
 let _firebaseDebounceTimer = null;
 let _firebaseSeededEmptyRemote = false;
-// 🔥 Skip exactly one `onValue` snapshot after our own write (RTDB round-trip); avoids JSON key-order mismatches
-let _firebaseSkipOneSnapshot = false;
-let _firebaseSkipSafetyTimer = null;
 
 function _firebaseSerializePayload(o){
   return JSON.stringify({
@@ -3021,10 +3122,22 @@ function _firebaseSerializePayload(o){
   });
 }
 
-function _firebaseArmSkipNextSnapshot(){
-  _firebaseSkipOneSnapshot = true;
-  clearTimeout(_firebaseSkipSafetyTimer);
-  _firebaseSkipSafetyTimer = setTimeout(()=>{ _firebaseSkipOneSnapshot = false; }, 4000);
+function _firebaseApplyValToCur(val){
+  if(!val || typeof val !== 'object') return;
+  const cur = window._firebaseGetDbObject();
+  if(typeof cur !== 'object' || !cur) return;
+  if(Array.isArray(val.teams)) cur.teams = val.teams;
+  if(Array.isArray(val.players)) cur.players = val.players;
+  if(Array.isArray(val.matches)) cur.matches = val.matches;
+  if(val.stats && typeof val.stats === 'object') cur.stats = val.stats;
+}
+
+function _dcvRunAfterHydrate(){
+  const fn = window.__dcvAfterHydrate;
+  window.__dcvAfterHydrate = null;
+  if(typeof fn === 'function'){
+    try{ fn(); }catch(e){ console.error('[Firebase] boot render failed:', e); }
+  }
 }
 
 try{
@@ -3032,22 +3145,60 @@ try{
   const db = getDatabase(app);
   const appDataRef = ref(db, 'appData');
 
+  async function _firebaseInitialHydrate(){
+    if(typeof window._firebaseGetDbObject !== 'function') return;
+    try{
+      const snap = await get(appDataRef);
+      if(snap.exists()){
+        const val = snap.val();
+        window._firebaseApplyingRemote = true;
+        try{ _firebaseApplyValToCur(val); }finally{ window._firebaseApplyingRemote = false; }
+      }else{
+        const cur = window._firebaseGetDbObject();
+        function tryLegacy(k){
+          try{ const v = localStorage.getItem('dcv_'+k); return v ? JSON.parse(v) : null; }catch(e){ return null; }
+        }
+        const teams = tryLegacy('teams'), players = tryLegacy('players'), matches = tryLegacy('matches'), stats = tryLegacy('stats');
+        const has = (teams && teams.length) || (players && players.length) || (matches && matches.length) || (stats && Object.keys(stats).length);
+        if(has){
+          if(Array.isArray(teams)) cur.teams = teams;
+          if(Array.isArray(players)) cur.players = players;
+          if(Array.isArray(matches)) cur.matches = matches;
+          if(stats && typeof stats === 'object') cur.stats = stats;
+          await set(appDataRef, JSON.parse(_firebaseSerializePayload(cur))).catch((e)=>{
+            console.error('[Firebase] legacy migrate set failed:', e.code || e, e.message || e);
+          });
+        }
+      }
+    }catch(e){
+      console.error('[Firebase] initial get failed:', e);
+    }
+  }
+
+  await _firebaseInitialHydrate();
+
+  window.__dcvPullAppDataFromFirebase = ()=>get(appDataRef).then((snap)=>{
+    if(!snap.exists()) return;
+    const val = snap.val();
+    window._firebaseApplyingRemote = true;
+    try{ _firebaseApplyValToCur(val); }finally{ window._firebaseApplyingRemote = false; }
+  });
+
   function _firebasePushNow(){
     if(window._firebaseApplyingRemote) return;
     const getDb = window._firebaseGetDbObject;
     if(typeof getDb !== 'function') return;
     const o = getDb();
     const payload = JSON.parse(_firebaseSerializePayload(o));
-    _firebaseArmSkipNextSnapshot();
-    update(ref(db), {
-      'appData/teams': payload.teams,
-      'appData/players': payload.players,
-      'appData/matches': payload.matches,
-      'appData/stats': payload.stats
+    update(appDataRef, {
+      teams: payload.teams,
+      players: payload.players,
+      matches: payload.matches,
+      stats: payload.stats
     }).catch((e)=>{
-      console.error('[Firebase] push/update failed:', e);
-      _firebaseSkipOneSnapshot = false;
-      clearTimeout(_firebaseSkipSafetyTimer);
+      console.error('[Firebase] push/update failed:', e.code || e, e.message || e);
+      if(String(e.code||e).includes('permission')||String(e.message||'').includes('Permission')) console.error('[Firebase] Check Realtime Database → Rules allow write to appData');
+      if(String(e.message||'').includes('404')||String(e.message||'').includes('Invalid URL')) console.error('[Firebase] Fix databaseURL in firebaseConfig to match your RTDB URL in the console');
     });
   }
 
@@ -3062,18 +3213,14 @@ try{
 
   onValue(appDataRef, (snap)=>{
     if(!snap.exists()){
-      // 🔥 One-time upload: empty remote + local data → seed `appData` (does not erase local)
       if(!_firebaseSeededEmptyRemote && typeof window._firebaseGetDbObject === 'function'){
         const o = window._firebaseGetDbObject();
         const hasLocal = (o.teams && o.teams.length) || (o.players && o.players.length) || (o.matches && o.matches.length) || (o.stats && Object.keys(o.stats).length);
         if(hasLocal){
           _firebaseSeededEmptyRemote = true;
           const payload = JSON.parse(_firebaseSerializePayload(o));
-          _firebaseArmSkipNextSnapshot();
           set(appDataRef, payload).catch((e)=>{
-            console.error('[Firebase] initial seed set failed:', e);
-            _firebaseSkipOneSnapshot = false;
-            clearTimeout(_firebaseSkipSafetyTimer);
+            console.error('[Firebase] initial seed set failed:', e.code || e, e.message || e);
           });
         }
       }
@@ -3081,25 +3228,9 @@ try{
     }
     const val = snap.val();
     if(!val || typeof val !== 'object') return;
-    if(_firebaseSkipOneSnapshot){
-      _firebaseSkipOneSnapshot = false;
-      clearTimeout(_firebaseSkipSafetyTimer);
-      return;
-    }
     window._firebaseApplyingRemote = true;
     try{
-      const cur = window._firebaseGetDbObject();
-      if(Array.isArray(val.teams)) cur.teams = val.teams;
-      if(Array.isArray(val.players)) cur.players = val.players;
-      if(Array.isArray(val.matches)) cur.matches = val.matches;
-      if(val.stats && typeof val.stats === 'object') cur.stats = val.stats;
-      // Mirror to localStorage using existing storage (no second Firebase push)
-      if(window.ST){
-        window.ST.save('teams', cur.teams);
-        window.ST.save('players', cur.players);
-        window.ST.save('matches', cur.matches);
-        window.ST.save('stats', cur.stats);
-      }
+      _firebaseApplyValToCur(val);
       if(typeof window._firebaseRefreshUI === 'function') window._firebaseRefreshUI();
     }catch(e){
       console.error('[Firebase] apply snapshot failed:', e);
@@ -3108,8 +3239,9 @@ try{
     }
   }, (e)=>console.error('[Firebase] onValue error:', e));
 }catch(e){
-  console.error('[Firebase] initializeApp failed:', e);
+  console.error('[Firebase] initializeApp / getDatabase failed:', e);
 }
+_dcvRunAfterHydrate();
 // 🔥 Firebase Integration End
 </script>
 </body>

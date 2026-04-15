@@ -1,7 +1,10 @@
 const fs = require('fs');
 const path = require('path');
-const src = path.join(__dirname, 'DC_VolleyDB_fixed.html');
-const dest = path.join(__dirname, 'public', 'index.html');
-fs.mkdirSync(path.dirname(dest), { recursive: true });
-fs.copyFileSync(src, dest);
+const pub = path.join(__dirname, 'public');
+fs.mkdirSync(pub, { recursive: true });
+fs.copyFileSync(path.join(__dirname, 'DC_VolleyDB_fixed.html'), path.join(pub, 'index.html'));
 console.log('Hosting: copied DC_VolleyDB_fixed.html -> public/index.html');
+fs.copyFileSync(path.join(__dirname, 'DC_VolleyDB_LiveCollector.html'), path.join(pub, 'live.html'));
+console.log('Hosting: copied DC_VolleyDB_LiveCollector.html -> public/live.html');
+fs.copyFileSync(path.join(__dirname, 'DC_VolleyDB_ShowcaseDisplay.html'), path.join(pub, 'DC_VolleyDB_ShowcaseDisplay.html'));
+console.log('Hosting: copied DC_VolleyDB_ShowcaseDisplay.html -> public/DC_VolleyDB_ShowcaseDisplay.html');
