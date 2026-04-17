@@ -71,11 +71,12 @@ html.db-kiosk #stage{padding-top:0!important}
   background:radial-gradient(ellipse 60% 60% at 50% 40%, var(--accent-color,#f5c842)08, transparent 70%);
   transition:background .6s;
 }
+/* Same footprint as Display Board large slideshow card (photo left, details right) */
 .spot-card{
-  width:min(420px,90vw);
+  width:min(720px,96vw);max-width:96vw;
   background:linear-gradient(160deg,var(--navy2) 0%,var(--card2) 100%);
   border:1px solid var(--border);border-radius:22px;
-  overflow:hidden;
+  overflow:visible;
   box-shadow:0 32px 80px rgba(0,0,0,.7), 0 0 0 1px rgba(255,255,255,.04);
   animation:spotIn .5s cubic-bezier(.2,0,.2,1);
   position:relative;z-index:1;
@@ -83,46 +84,68 @@ html.db-kiosk #stage{padding-top:0!important}
 @keyframes spotIn{from{opacity:0;transform:scale(.94) translateY(20px)}to{opacity:1;transform:scale(1) translateY(0)}}
 
 .spot-banner{height:8px;width:100%}
-.spot-body{padding:28px 28px 22px}
-.spot-photo-wrap{display:flex;justify-content:center;margin-bottom:14px;position:relative}
-.spot-photo{
-  width:130px;height:130px;border-radius:50%;object-fit:cover;
-  border:4px solid var(--gold);
-  box-shadow:0 0 0 8px rgba(245,200,66,.1),0 12px 40px rgba(0,0,0,.5);
+.spot-body{padding:0}
+.spot-body-row{
+  display:grid!important;
+  grid-template-columns:1fr 1fr;
+  gap:18px;
+  align-items:stretch;
+  overflow:visible;
+  padding:18px 20px 18px 8px;
 }
-.spot-avatar{
-  width:130px;height:130px;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;
-  font-weight:900;font-size:40px;
-  border:4px solid var(--gold);
-  box-shadow:0 0 0 8px rgba(245,200,66,.1),0 12px 40px rgba(0,0,0,.5);
+.spot-col-burst{
+  overflow:visible!important;
+  display:flex!important;
+  flex-direction:column;
+  align-items:stretch!important;
+  align-self:stretch;
+  min-height:0;
+  position:relative;
 }
-.spot-jersey-lbl{text-align:center;font-size:12px;color:var(--text3);font-weight:700;letter-spacing:1px;margin-bottom:4px}
+.spot-photo-lg,.spot-avatar-lg{
+  width:100%!important;height:100%!important;min-height:200px;flex:1 1 auto;
+  margin:0!important;position:relative;z-index:2;
+  border-radius:12px;object-fit:cover;
+  box-shadow:0 10px 28px rgba(0,0,0,.4);
+  border:3px solid var(--gold);
+}
+.spot-avatar-lg{
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  font-weight:900;font-size:38px!important;
+}
+.spot-col-right{
+  min-height:0;box-sizing:border-box;
+  background:var(--card2);border:1px solid var(--border2);
+  border-radius:12px;padding:12px 14px;
+  display:flex;flex-direction:column;
+}
+.spot-jersey-lbl{text-align:left;font-size:11px;color:var(--text3);font-weight:700;letter-spacing:.5px;margin-bottom:2px}
 .spot-name{
-  font-size:clamp(22px,4vw,34px);font-weight:900;text-align:center;
-  letter-spacing:-.5px;margin-bottom:4px;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 4px;
+  font-size:clamp(16px,2.2vw,22px);font-weight:900;text-align:left;
+  letter-spacing:-.5px;margin-bottom:3px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 4px 0 0;max-width:100%;width:100%;box-sizing:border-box;
 }
-.spot-team{font-size:14px;color:var(--text2);text-align:center;margin-bottom:14px}
-.spot-tags{display:flex;gap:7px;justify-content:center;flex-wrap:wrap;margin-bottom:18px}
-.spot-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:18px}
+.spot-team{font-size:12px;color:var(--text2);text-align:left;margin-bottom:8px}
+.spot-tags{display:flex;gap:5px;justify-content:flex-start;flex-wrap:wrap;margin-bottom:10px}
+.spot-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-top:8px}
 .spot-stat{
-  background:rgba(255,255,255,.05);border:1px solid var(--border2);
-  border-radius:10px;padding:10px 4px;text-align:center;
+  background:var(--card2);border:1px solid var(--border2);
+  border-radius:7px;padding:7px 3px;text-align:center;
 }
-.spot-sv{font-size:24px;font-weight:900;line-height:1;margin-bottom:3px}
-.spot-sl{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.4px}
-.spot-bars{border-top:1px solid var(--border2);padding-top:14px}
-.spot-bar-row{margin-bottom:8px}
-.spot-bar-lbl{display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px}
+.spot-sv{font-size:16px;font-weight:900;line-height:1;margin-bottom:2px}
+.spot-sl{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px}
+.spot-bars{margin-top:10px;border-top:1px solid var(--border2);padding-top:10px}
+.spot-bar-row{margin-bottom:7px}
+.spot-bar-lbl{display:flex;justify-content:space-between;font-size:10px;margin-bottom:3px}
 .spot-bar-lbl span:first-child{color:var(--text3)}
 .spot-bar-lbl span:last-child{font-weight:700;color:var(--text2)}
-.spot-bar-track{height:5px;background:var(--border2);border-radius:3px;overflow:hidden}
-.spot-bar-fill{height:100%;border-radius:3px;transition:width .9s cubic-bezier(.4,0,.2,1)}
-.spot-info{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:14px}
+.spot-bar-track{height:8px;background:var(--border2);border-radius:4px;overflow:hidden;margin-top:3px}
+.spot-bar-fill{height:100%;border-radius:4px;transition:width .9s cubic-bezier(.4,0,.2,1)}
+.spot-spacer{flex:1;min-height:4px}
+.spot-info{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:8px}
 .spot-info-item{
-  background:rgba(255,255,255,.04);border:1px solid var(--border2);
-  border-radius:8px;padding:7px 10px;display:flex;align-items:center;gap:6px;
+  background:var(--card2);border:1px solid var(--border2);
+  border-radius:6px;padding:6px 8px;display:flex;align-items:center;gap:5px;
 }
 .spot-info-lbl{font-size:10px;color:var(--text3)}
 .spot-info-val{font-size:12px;font-weight:700;margin-left:auto}
@@ -532,7 +555,6 @@ function render(){
 // ═══════════════════════════════════════════════════════
 function renderSpotlight(){
   const wrap=document.getElementById('mode-spotlight');
-  const bg=document.getElementById('spot-bg')||createSpotBg(wrap);
   wrap.innerHTML='';
 
   if(!slideList.length){
@@ -544,7 +566,6 @@ function renderSpotlight(){
   const posClr=pc(p.pos);
   const efVal=s.atkAttempts>0?eff(s):null;
 
-  // BG glow
   const bgEl=document.createElement('div');
   bgEl.id='spot-bg';
   bgEl.style.cssText='position:absolute;inset:0;background:radial-gradient(ellipse 55% 55% at 50% 35%,'+posClr+'10,transparent 70%);transition:background .6s;pointer-events:none';
@@ -554,101 +575,138 @@ function renderSpotlight(){
   card.className='spot-card';
   card.style.setProperty('--accent',posClr);
 
-  // Banner
   const banner=document.createElement('div');
   banner.className='spot-banner';
   banner.style.background='linear-gradient(90deg,'+posClr+','+posClr+'44)';
   card.appendChild(banner);
 
   const body=document.createElement('div');
-  body.className='spot-body';
+  body.className='spot-body spot-body-row';
 
-  // Photo
-  const pw=document.createElement('div');
-  pw.className='spot-photo-wrap';
+  const colL=document.createElement('div');
+  colL.className='spot-col-burst';
+  const colR=document.createElement('div');
+  colR.className='spot-col-right';
+
   if(p.photo){
     const img=document.createElement('img');
-    img.className='spot-photo';
+    img.className='spot-photo-lg';
     img.style.borderColor=posClr;
-    img.src=p.photo; img.alt=p.name;
-    img.onerror=function(){pw.replaceChild(mkAv(p,posClr,'spot-avatar'),this);};
-    pw.appendChild(img);
-  } else { pw.appendChild(mkAv(p,posClr,'spot-avatar')); }
-  body.appendChild(pw);
+    img.src=p.photo;
+    img.alt=p.name;
+    img.onerror=function(){
+      const av=mkSpotAv(p,posClr);
+      colL.replaceChild(av,this);
+    };
+    colL.appendChild(img);
+  } else {
+    colL.appendChild(mkSpotAv(p,posClr));
+  }
 
-  // Jersey
   const j=document.createElement('div');
-  j.className='spot-jersey-lbl'; j.textContent='#'+p.jersey;
-  body.appendChild(j);
+  j.className='spot-jersey-lbl';
+  j.textContent='#'+p.jersey;
+  colR.appendChild(j);
 
-  // Name
   const nm=document.createElement('div');
-  nm.className='spot-name'; nm.textContent=p.name;
-  body.appendChild(nm);
+  nm.className='spot-name';
+  nm.textContent=p.name;
+  colR.appendChild(nm);
 
-  // Team
   const tm=document.createElement('div');
-  tm.className='spot-team'; tm.textContent=tn(p.team);
-  body.appendChild(tm);
+  tm.className='spot-team';
+  tm.textContent=tn(p.team);
+  colR.appendChild(tm);
 
-  // Tags
   const tags=document.createElement('div');
   tags.className='spot-tags';
-  const posTag=document.createElement('span');posTag.className='pt '+p.pos;posTag.textContent=p.pos;tags.appendChild(posTag);
-  if(p.gen){const g=document.createElement('span');g.className=p.gen==='M'?'gM':'gF';g.textContent=p.gen==='M'?'♂':'♀';tags.appendChild(g);}
-  if(s.points>0){const b=document.createElement('span');b.className='badge-pts';b.textContent=s.points+' pts';tags.appendChild(b);}
-  body.appendChild(tags);
+  const posTag=document.createElement('span');
+  posTag.className='pt '+p.pos;
+  posTag.textContent=p.pos;
+  tags.appendChild(posTag);
+  if(p.gen){
+    const g=document.createElement('span');
+    g.className=p.gen==='M'?'gM':'gF';
+    g.textContent=p.gen==='M'?'♂':'♀';
+    tags.appendChild(g);
+  }
+  if(s.points>0){
+    const b=document.createElement('span');
+    b.className='badge-pts';
+    b.textContent=s.points+' pts';
+    tags.appendChild(b);
+  }
+  colR.appendChild(tags);
 
-  // Stats
   const stats=document.createElement('div');
   stats.className='spot-stats';
   [{val:s.atkKills,lbl:'Kills',clr:'var(--green)'},{val:s.blkSolid,lbl:'Blocks',clr:'var(--purple)'},
    {val:s.srvAces,lbl:'Aces',clr:'var(--blue)'},{val:s.points,lbl:'Points',clr:'var(--gold)'}].forEach(st=>{
-    const c=document.createElement('div');c.className='spot-stat';
-    const sv=document.createElement('div');sv.className='spot-sv';sv.style.color=st.clr;sv.textContent=st.val;
-    const sl=document.createElement('div');sl.className='spot-sl';sl.textContent=st.lbl;
-    c.appendChild(sv);c.appendChild(sl);stats.appendChild(c);
+    const c=document.createElement('div');
+    c.className='spot-stat';
+    const sv=document.createElement('div');
+    sv.className='spot-sv';
+    sv.style.color=st.clr;
+    sv.textContent=st.val;
+    const sl=document.createElement('div');
+    sl.className='spot-sl';
+    sl.textContent=st.lbl;
+    c.appendChild(sv);
+    c.appendChild(sl);
+    stats.appendChild(c);
   });
-  body.appendChild(stats);
+  colR.appendChild(stats);
 
-  // Bars
-  const bars=document.createElement('div');bars.className='spot-bars';
+  const bars=document.createElement('div');
+  bars.className='spot-bars';
   [{label:'Attack Eff%',val:efVal!==null?Math.max(0,efVal+30):0,display:efVal!==null?efVal+'%':'–',color:'#2ed573'},
    {label:'Serve Rate',val:s.srvTotal>0?srvR(s):0,display:s.srvTotal>0?srvR(s)+'%':'–',color:'#4a9eff'},
    {label:'Rcv Rating',val:s.rcvTotal>0?rcvR(s):0,display:s.rcvTotal>0?rcvR(s)+'%':'–',color:'#a78bfa'}].forEach(b=>{
-    const row=document.createElement('div');row.className='spot-bar-row';
+    const row=document.createElement('div');
+    row.className='spot-bar-row';
     row.innerHTML='<div class="spot-bar-lbl"><span>'+b.label+'</span><span>'+b.display+'</span></div>'+
       '<div class="spot-bar-track"><div class="spot-bar-fill" style="width:0%;background:'+b.color+'"></div></div>';
     bars.appendChild(row);
     setTimeout(()=>{const f=row.querySelector('.spot-bar-fill');if(f)f.style.width=Math.min(100,b.val)+'%';},80);
   });
-  body.appendChild(bars);
+  colR.appendChild(bars);
 
-  // Info grid
+  const spacer=document.createElement('div');
+  spacer.className='spot-spacer';
+  colR.appendChild(spacer);
+
   const infoItems=[
-    p.ht?{icon:'↑',lbl:'Height',val:p.ht+'cm'}:null,
+    p.ht?{icon:'↑',lbl:'Height',val:p.ht+' cm'}:null,
     p.age?{icon:'🎂',lbl:'Age',val:p.age+' yrs'}:null,
     p.nat?{icon:'🌐',lbl:'Nation',val:p.nat}:null,
     {icon:'⭐',lbl:'PER Score',val:String(per(s))},
   ].filter(Boolean);
   if(infoItems.length){
-    const info=document.createElement('div');info.className='spot-info';
+    const info=document.createElement('div');
+    info.className='spot-info';
     infoItems.forEach(item=>{
-      const c=document.createElement('div');c.className='spot-info-item';
-      c.innerHTML='<span style="font-size:13px">'+item.icon+'</span><span class="spot-info-lbl">'+item.lbl+'</span><span class="spot-info-val">'+item.val+'</span>';
+      const c=document.createElement('div');
+      c.className='spot-info-item';
+      c.innerHTML='<span style="font-size:12px">'+item.icon+'</span><span class="spot-info-lbl">'+item.lbl+'</span><span class="spot-info-val">'+item.val+'</span>';
       info.appendChild(c);
     });
-    body.appendChild(info);
+    colR.appendChild(info);
   }
 
+  body.appendChild(colL);
+  body.appendChild(colR);
   card.appendChild(body);
   wrap.appendChild(card);
 }
 
-function mkAv(p,posClr,cls){
-  const av=document.createElement('div');av.className=cls;
-  av.style.cssText='background:'+posClr+'22;color:'+posClr+';border-color:'+posClr;
-  av.textContent='#'+p.jersey; return av;
+function mkSpotAv(p,posClr){
+  const av=document.createElement('div');
+  av.className='spot-avatar-lg';
+  av.style.background=posClr+'22';
+  av.style.color=posClr;
+  av.style.borderColor=posClr;
+  av.textContent='#'+p.jersey;
+  return av;
 }
 
 // ═══════════════════════════════════════════════════════
